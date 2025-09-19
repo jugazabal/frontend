@@ -13,8 +13,8 @@ const App = () => {
     const changedNote = { ...note, important: !note.important }
     notesService
       .update(id, changedNote)
-      .then(response => {
-        setNotes(notes.map(note => note.id === id ? response.data : note))
+      .then(data => {
+        setNotes(notes.map(note => note.id === id ? data : note))
       })
   }
 
@@ -22,9 +22,9 @@ const App = () => {
     console.log('effect')
     notesService
       .getAll()
-      .then(response => {
+      .then(data => {
         console.log('promise fulfilled')
-        setNotes(response.data)
+        setNotes(data)
       })
   }, [])
   console.log('render', notes.length, 'notes')
@@ -37,8 +37,8 @@ const App = () => {
     }
     notesService
       .create(noteObject)
-      .then(response => {
-        setNotes(notes.concat(response.data))
+      .then(data => {
+        setNotes(notes.concat(data))
         setNewNote('')
       })
   }
