@@ -1,3 +1,7 @@
+const deleteNote = id => {
+  return axios.delete(`${baseUrl}/${id}`)
+}
+
 import axios from 'axios'
 const baseUrl = 'http://localhost:3001/notes'
 
@@ -20,5 +24,6 @@ const update = (id, newObject) => {
 export default { 
   getAll: getAll, 
   create: create, 
-  update: update 
+  update: update,
+  delete: deleteNote
 }

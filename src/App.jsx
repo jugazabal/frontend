@@ -1,3 +1,12 @@
+  const deleteNote = id => {
+    if (window.confirm('Delete this note?')) {
+      notesService
+        .delete(id)
+        .then(() => {
+          setNotes(notes.filter(note => note.id !== id))
+        })
+    }
+  }
 import { useState, useEffect } from 'react'
 import notesService from './services/notes'
 import Note from './components/Note'
@@ -11,10 +20,17 @@ const App = () => {
   const toggleImportanceOf = id => {
     const note = notes.find(n => n.id === id)
     const changedNote = { ...note, important: !note.important }
+
     notesService
       .update(id, changedNote)
-      .then(data => {
-        setNotes(notes.map(note => note.id === id ? data : note))
+      .then(returnedNote => {
+        setNotes(notes.map(note => note.id === id ? returnedNote : note))
+      })
+      .catch(error => {
+        alert(
+          `the note '${note.content}' was already deleted from server`
+        )
+        setNotes(notes.filter(n => n.id !== id))
       })
   }
 
@@ -59,7 +75,12 @@ const App = () => {
       </div>
       <ul>
         {notesToShow.map((note) => (
-          <Note key={note.id} note={note} onToggle={() => toggleImportanceOf(note.id)} />
+          <Note
+            key={note.id}
+            note={note}
+            onToggle={() => toggleImportanceOf(note.id)}
+            onDelete={() => deleteNote(note.id)}
+          />
         ))}
       </ul>
       <form onSubmit={addNote}>
