@@ -11,6 +11,7 @@ const Note = ({ note, onToggle, onDelete }) => {
           borderWidth: '1px',
           borderStyle: 'solid',
           background: 'white',
+          marginLeft: '0.5em',
           marginRight: '0.5em',
           cursor: 'pointer'
         }}
