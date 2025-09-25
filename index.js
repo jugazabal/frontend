@@ -48,8 +48,24 @@ async function saveNotes() {
   await fs.writeFile(DATA_FILE, JSON.stringify(notes, null, 2), 'utf8')
 }
 
+// Serve built frontend (if dist exists)
+const distPath = path.join(__dirname, 'dist')
+app.use(express.static(distPath))
+
 app.get('/', (request, response) => {
-	response.send('<h1>Hello World!</h1>')
+	// If no dist yet (dev mode), fallback simple message
+	const indexFile = path.join(distPath, 'index.html')
+	fs.readFile(indexFile, 'utf8')
+		.then(() => response.sendFile(indexFile))
+		.catch(() => response.send('<h1>Notes App Backend</h1><p>Build the frontend to serve the React app.</p>'))
+})
+
+// (Optional) SPA fallback for client-side routes
+app.get('/app/*', (req, res, next) => {
+	const indexFile = path.join(distPath, 'index.html')
+	fs.readFile(indexFile, 'utf8')
+		.then(() => res.sendFile(indexFile))
+		.catch(() => next())
 })
 
 app.get('/health', (req, res) => {

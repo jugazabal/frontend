@@ -44,6 +44,22 @@ Express backend (index.js)
 
 From part 3 onwards, the frontend is used with a [separate backend](https://github.com/fullstack-hy2020/part3-notes-backend).
 
+## Deploying to Render (single service)
+
+1. Ensure the server serves the built frontend (already configured: Express serves files from `dist/`).
+2. Push this repository to GitHub.
+3. On Render dashboard: New -> Web Service -> connect the repo.
+4. Set Build Command: `npm install && npm run build`.
+5. Set Start Command: `node index.js` (or `npm run start:prod`).
+6. Leave `PORT` unset (Render provides it). Do not set `VITE_API_BASE` so relative `/api` works.
+7. Deploy and open the generated URL.
+8. Verify:
+	- React UI loads at `/`
+	- API responds at `/api/notes`
+	- Health endpoint `/health`
+
+To redeploy, push new commits to the tracked branch (enable Auto Deploy in Render settings).
+
 ## How to switch between branches?
 
 The different stages of the application are saved in different branches. Switching branches changes the code in your working directory to match the state of the branch you switched to. This allows you to work on different versions of the application without affecting the codebase of other branches.

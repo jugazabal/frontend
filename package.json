@@ -11,6 +11,7 @@
     "start": "node index.js",
     "backend:dev": "nodemon index.js",
     "dev:full": "(node index.js &) && vite",
+  "start:prod": "npm run build && node index.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
