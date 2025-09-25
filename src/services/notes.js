@@ -1,9 +1,9 @@
+import axios from 'axios'
+const baseUrl = 'http://localhost:3001/api/notes'
+
 const deleteNote = id => {
   return axios.delete(`${baseUrl}/${id}`)
 }
-
-import axios from 'axios'
-const baseUrl = 'http://localhost:3001/notes'
 
 
 const getAll = () => {

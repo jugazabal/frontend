@@ -49,9 +49,38 @@ app.delete('/api/notes/:id', (request, response) => {
 })
 
 app.post('/api/notes', (request, response) => {
-  const note = request.body
-  console.log(note)
-  response.json(note)
+	const body = request.body
+
+	if (!body.content) {
+		return response.status(400).json({ error: 'content missing' })
+	}
+
+	const ids = notes.map(n => Number(n.id))
+	const maxId = ids.length ? Math.max(...ids) : 0
+
+	const note = {
+		id: String(maxId + 1),
+		content: body.content,
+		important: body.important || false
+	}
+
+	notes = notes.concat(note)
+	response.status(201).json(note)
+})
+
+app.put('/api/notes/:id', (request, response) => {
+	const id = request.params.id
+	const body = request.body
+	const existing = notes.find(n => n.id === id)
+	if (!existing) {
+		return response.status(404).json({ error: 'note not found' })
+	}
+	if (body.content === undefined && body.important === undefined) {
+		return response.status(400).json({ error: 'nothing to update' })
+	}
+	const updated = { ...existing, ...body }
+	notes = notes.map(n => n.id === id ? updated : n)
+	response.json(updated)
 })
 
 const PORT = 3001
