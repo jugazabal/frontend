@@ -1,5 +1,8 @@
 import axios from 'axios'
-const baseUrl = 'http://localhost:3001/api/notes'
+// Use relative URL so Vite proxy (in dev) or same-origin (in prod) handles routing.
+// Allow override via environment variable VITE_API_BASE if needed.
+const apiBase = import.meta.env.VITE_API_BASE || ''
+const baseUrl = `${apiBase}/api/notes`
 
 const deleteNote = id => {
   return axios.delete(`${baseUrl}/${id}`)

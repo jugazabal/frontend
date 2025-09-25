@@ -20,7 +20,27 @@ Follow these steps to run the application:
 
 5. Start the application with the command `npm run dev`. By default, the application will start on port 5173, so it will be available at http://localhost:5173/
 
-6. If you are in branches part2-4 to part2-8, additionally start the JSON server by running the command `npm run server` in a separate terminal window
+6. For this branch setup you can run the backend (Express) and frontend together. Options:
+	 - In two terminals:
+		 - `npm run backend:dev` (starts Express with nodemon on http://localhost:3001)
+		 - `npm run dev` (starts Vite on http://localhost:5173 with a proxy to the backend under /api)
+	 - Or in a single terminal (simple background start):
+		 - `npm run dev:full`
+
+	 The frontend makes requests to `/api/notes` (relative path). During development the Vite proxy forwards these to `http://localhost:3001/api/notes`. In production (a single deployment) the same origin can serve both.
+
+Architecture diagram (simplified):
+
+```
+browser
+	└─ React app (fetches /api/notes)
+
+Vite dev server (localhost:5173)
+	└─ Proxy /api -> Express backend (localhost:3001)
+
+Express backend (index.js)
+	└─ In-memory notes data
+```
 
 From part 3 onwards, the frontend is used with a [separate backend](https://github.com/fullstack-hy2020/part3-notes-backend).
 
