@@ -60,14 +60,6 @@ app.get('/', (request, response) => {
 		.catch(() => response.send('<h1>Notes App Backend</h1><p>Build the frontend to serve the React app.</p>'))
 })
 
-// SPA fallback for any non-API route (Express 5 compatible)
-app.get('*', (req, res, next) => {
-	if (req.path.startsWith('/api')) return next()
-	const indexFile = path.join(distPath, 'index.html')
-	fs.readFile(indexFile, 'utf8')
-		.then(() => res.sendFile(indexFile))
-		.catch(() => next())
-})
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', notes: notes.length })
@@ -135,6 +127,14 @@ app.put('/api/notes/:id', async (request, response, next) => {
 		await saveNotes()
 		response.json(updated)
 	} catch (err) { next(err) }
+})
+
+// SPA fallback AFTER API routes (non-API get requests)
+app.get(/^(?!\/api).*/, (req, res, next) => {
+	const indexFile = path.join(distPath, 'index.html')
+	fs.readFile(indexFile, 'utf8')
+		.then(() => res.sendFile(indexFile))
+		.catch(() => next())
 })
 
 // Unknown endpoint handler
