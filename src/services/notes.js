@@ -10,8 +10,14 @@ const deleteNote = id => {
 
 
 const getAll = () => {
-  const request = axios.get(baseUrl)
-  return request.then(response => response.data)
+  return axios.get(baseUrl)
+    .then(response => {
+      const data = response.data
+      if (!Array.isArray(data)) {
+        throw new Error('Unexpected response format (expected an array of notes)')
+      }
+      return data
+    })
 }
 
 const create = newObject => {

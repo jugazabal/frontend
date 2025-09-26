@@ -39,15 +39,15 @@ const App = () => {
   }
 
   useEffect(() => {
-    console.log('effect')
     notesService
       .getAll()
-      .then(data => {
-        console.log('promise fulfilled')
-        setNotes(data)
+      .then(data => setNotes(data))
+      .catch(err => {
+        console.error(err)
+        setErrorMessage('Failed to load notes. Check API configuration.')
+        setTimeout(() => setErrorMessage(null), 5000)
       })
   }, [])
-  console.log('render', notes.length, 'notes')
 
   const addNote = (event) => {
     event.preventDefault()
