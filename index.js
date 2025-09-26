@@ -1,3 +1,5 @@
+/* eslint-env node */
+import process from 'process'
 import express from 'express'
 import morgan from 'morgan'
 import cors from 'cors'
@@ -17,7 +19,40 @@ const DATA_FILE = path.join(DATA_DIR, 'notes.json')
 let notes = []
 
 // Middleware
-app.use(cors())
+const defaultAllowedOrigins = [
+	'http://localhost:5173',
+	'http://localhost:4173',
+	'https://jugazabal.github.io'
+]
+
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+	.split(',')
+	.map(origin => origin.trim())
+	.filter(Boolean)
+
+if (!allowedOrigins.length) {
+	allowedOrigins.push(...defaultAllowedOrigins)
+}
+
+const corsOptions = {
+	origin: (origin, callback) => {
+		// Allow requests with no origin (mobile apps, curl, etc.)
+		if (!origin) return callback(null, true)
+
+		if (!allowedOrigins.length) {
+			return callback(null, true)
+		}
+
+		if (allowedOrigins.includes(origin)) {
+			return callback(null, true)
+		}
+
+		console.warn(`Blocked CORS origin: ${origin}`)
+		return callback(new Error('Not allowed by CORS'))
+	}
+}
+
+app.use(cors(corsOptions))
 app.use(express.json())
 
 // Morgan request logging including request body (for POST/PUT)
@@ -36,11 +71,12 @@ async function loadNotes() {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf8')
     notes = JSON.parse(data)
-  } catch (err) {
-    // Initialize with seed if file missing or invalid
-    notes = seedNotes
-    await saveNotes()
-  }
+		} catch (error) {
+			console.warn('Failed to load notes from persistence, using seed data.', error)
+			// Initialize with seed if file missing or invalid
+			notes = seedNotes
+			await saveNotes()
+		}
 }
 
 async function saveNotes() {
