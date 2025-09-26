@@ -19,27 +19,23 @@ const DATA_FILE = path.join(DATA_DIR, 'notes.json')
 let notes = []
 
 // Middleware
-const defaultAllowedOrigins = [
-	'http://localhost:5173',
-	'http://localhost:4173',
-	'https://jugazabal.github.io'
-]
+const githubPagesOrigin = 'https://jugazabal.github.io'
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+const allowListFromEnv = (process.env.ALLOWED_ORIGINS || '')
 	.split(',')
 	.map(origin => origin.trim())
 	.filter(Boolean)
 
-if (!allowedOrigins.length) {
-	allowedOrigins.push(...defaultAllowedOrigins)
-}
+const allowedOrigins = allowListFromEnv.length
+	? Array.from(new Set([...allowListFromEnv, githubPagesOrigin]))
+	: []
 
 const corsOptions = {
 	origin: (origin, callback) => {
 		// Allow requests with no origin (mobile apps, curl, etc.)
 		if (!origin) return callback(null, true)
 
-		if (!allowedOrigins.length) {
+			if (!allowedOrigins.length) {
 			return callback(null, true)
 		}
 
