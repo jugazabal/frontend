@@ -60,8 +60,9 @@ app.get('/', (request, response) => {
 		.catch(() => response.send('<h1>Notes App Backend</h1><p>Build the frontend to serve the React app.</p>'))
 })
 
-// (Optional) SPA fallback for client-side routes
-app.get('/app/*', (req, res, next) => {
+// SPA fallback for any non-API route (Express 5 compatible)
+app.get('*', (req, res, next) => {
+	if (req.path.startsWith('/api')) return next()
 	const indexFile = path.join(distPath, 'index.html')
 	fs.readFile(indexFile, 'utf8')
 		.then(() => res.sendFile(indexFile))
