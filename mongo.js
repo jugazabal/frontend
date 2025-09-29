@@ -18,7 +18,9 @@ import process from 'process'
 
 // If user explicitly wants to practice with the provided connection string,
 // you can place it in MONGODB_URI. (Avoid committing secrets!)
-const FALLBACK_URI = 'mongodb+srv://jugazabal_db_user:APKizFjSVBIuRnT4@cluster0.p5hzmuf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+// Added explicit database name `noteApp` so we don't use the default `test` DB.
+// NOTE: Credentials are still embedded here only for practice; remove before any public commit.
+const FALLBACK_URI = 'mongodb+srv://jugazabal_db_user:APKizFjSVBIuRnT4@cluster0.p5hzmuf.mongodb.net/noteApp?retryWrites=true&w=majority&appName=Cluster0'
 
 const mongoUri = process.env.MONGODB_URI || FALLBACK_URI
 
