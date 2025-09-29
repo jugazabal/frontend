@@ -23,7 +23,9 @@ const FORCE = process.argv.includes('--force')
 async function resolveSourceFile() {
   const candidates = [
     path.join(__dirname, 'data', 'notes.json'),
-    path.join(__dirname, 'data', 'db.json')
+    path.join(__dirname, 'data', 'db.json'),
+    // Support root-level db.json (json-server style) containing { "notes": [...] }
+    path.join(__dirname, 'db.json')
   ]
   for (const f of candidates) {
     try { await fs.access(f); return f } catch { /* continue */ }
@@ -48,8 +50,14 @@ async function main() {
     console.error('Failed to parse source JSON:', err.message)
     process.exit(1)
   }
-  if (!Array.isArray(data)) {
-    console.error('Source JSON is not an array.')
+  // Allow either an array OR an object with a top-level "notes" array
+  if (Array.isArray(data)) {
+    // ok
+  } else if (data && typeof data === 'object' && Array.isArray(data.notes)) {
+    console.log('Found notes within root object at key "notes"')
+    data = data.notes
+  } else {
+    console.error('Source JSON must be an array or an object with a notes[] array.')
     process.exit(1)
   }
 
