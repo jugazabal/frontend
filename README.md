@@ -44,6 +44,44 @@ Express backend (index.js)
 
 From part 3 onwards, the frontend is used with a [separate backend](https://github.com/fullstack-hy2020/part3-notes-backend).
 
+## MongoDB persistence (current branch)
+
+The backend has been upgraded to use MongoDB (via Mongoose) instead of file-based storage.
+
+### Setup
+
+1. Copy `.env.example` to `.env`.
+2. Set `MONGODB_URI` to your connection string (Atlas or local) targeting database `noteApp`.
+3. (Optional) Set `ALLOWED_ORIGINS` for extra CORS origins.
+4. Start backend: `npm run backend:dev` (or `npm run dev:full`).
+
+### Import old notes
+
+If you previously used file persistence (`data/notes.json` or `data/db.json`) import them:
+
+```
+MONGODB_URI=... npm run seed:mongo
+```
+
+Use `--force` to merge into a non-empty collection:
+
+```
+MONGODB_URI=... node import-notes.js --force
+```
+
+### API Changes
+
+- IDs are now Mongo ObjectIds (string form) returned as `id`.
+- Errors:
+	- 400 malformatted id (invalid ObjectId)
+	- 400 content missing
+	- 404 note not found
+
+### Model
+
+See `models/note.js` for schema & JSON transform.
+
+
 ## Deploying to Render (single service)
 
 1. Ensure the server serves the built frontend (already configured: Express serves files from `dist/`).
