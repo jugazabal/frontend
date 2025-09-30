@@ -24,17 +24,22 @@ const App = () => {
 
   const toggleImportanceOf = id => {
     const note = notes.find(n => n.id === id)
+    if (!note) return
     const changedNote = { ...note, important: !note.important }
-
     notesService
       .update(id, changedNote)
       .then(returnedNote => {
-        setNotes(notes.map(note => note.id === id ? returnedNote : note))
+        setNotes(notes.map(n => n.id === id ? returnedNote : n))
       })
-      .catch(() => {
-        setErrorMessage(`The note '${note.content}' was already deleted from server`)
+      .catch(err => {
+        const baseMsg = `Failed to update '${note.content}'`
+        if (err.message === 'note not found') {
+          setErrorMessage(`The note '${note.content}' was already deleted from server`)
+          setNotes(notes.filter(n => n.id !== id))
+        } else {
+          setErrorMessage(err.message ? `${baseMsg}: ${err.message}` : baseMsg)
+        }
         setTimeout(() => setErrorMessage(null), 5000)
-        setNotes(notes.filter(n => n.id !== id))
       })
   }
 
@@ -51,8 +56,19 @@ const App = () => {
 
   const addNote = (event) => {
     event.preventDefault()
+    const trimmed = newNote.trim()
+    if (!trimmed) {
+      setErrorMessage('Note content cannot be empty')
+      setTimeout(() => setErrorMessage(null), 4000)
+      return
+    }
+    if (trimmed.length > 500) {
+      setErrorMessage('Note content exceeds 500 characters limit')
+      setTimeout(() => setErrorMessage(null), 4000)
+      return
+    }
     const noteObject = {
-      content: newNote,
+      content: trimmed,
       important: Math.random() > 0.5
     }
     notesService
@@ -60,6 +76,10 @@ const App = () => {
       .then(data => {
         setNotes(notes.concat(data))
         setNewNote('')
+      })
+      .catch(err => {
+        setErrorMessage(err.message || 'Failed to create note')
+        setTimeout(() => setErrorMessage(null), 5000)
       })
   }
 
