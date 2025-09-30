@@ -30,6 +30,11 @@ notesRouter.post('/', async (req, res, next) => {
     if (content.trim().length > 500) {
       return res.status(422).json({ error: 'content exceeds 500 characters' })
     }
+    // Application-level duplicate guard (case-insensitive)
+    const existing = await Note.findOne({ content: content.trim() }).collation({ locale: 'en', strength: 2 })
+    if (existing) {
+      return res.status(422).json({ error: 'duplicate note content' })
+    }
     const note = await Note.create({ content: content.trim(), important: important === true })
     res.status(201).json(note.toJSON())
   } catch (err) { next(err) }
@@ -50,7 +55,13 @@ notesRouter.put('/:id', async (req, res, next) => {
       if (body.content.trim().length > 500) {
         return res.status(422).json({ error: 'content exceeds 500 characters' })
       }
-      update.content = body.content
+      // If changing content, enforce duplicate rule
+      const trimmed = body.content.trim()
+      const existing = await Note.findOne({ content: trimmed }).collation({ locale: 'en', strength: 2 })
+      if (existing && existing.id !== req.params.id) {
+        return res.status(422).json({ error: 'duplicate note content' })
+      }
+      update.content = trimmed
     }
     if (body.important !== undefined) update.important = body.important === true
     const updated = await Note.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true })
