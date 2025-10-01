@@ -52,8 +52,37 @@ The backend has been upgraded to use MongoDB (via Mongoose) instead of file-base
 
 1. Copy `.env.example` to `.env`.
 2. Set `MONGODB_URI` to your connection string (Atlas or local) targeting database `noteApp`.
-3. (Optional) Set `ALLOWED_ORIGINS` for extra CORS origins.
-4. Start backend: `npm run backend:dev` (or `npm run dev:full`).
+3. (Optional) Set `TEST_MONGODB_URI` to a separate database (e.g. `testNoteApp`) for isolation in tests (`NODE_ENV=test`). If omitted, tests fall back to `MONGODB_URI` (not recommended).
+4. (Optional) Set `ALLOWED_ORIGINS` for extra CORS origins.
+5. Start backend: `npm run backend:dev` (or `npm run dev:full`).
+
+Environment variables summary:
+
+| Variable | Purpose | Notes |
+|----------|---------|-------|
+| PORT | Backend listening port | Render/host will inject automatically |
+| MONGODB_URI | Primary MongoDB connection | Required for dev/prod |
+| TEST_MONGODB_URI | Test DB connection | Used only when `NODE_ENV=test` |
+| VITE_API_BASE | Frontend override of API base | Leave empty if same origin |
+| ALLOWED_ORIGINS | Extra CORS origins | Comma separated |
+
+Scripts & modes:
+
+| Script | NODE_ENV | What it does |
+|--------|----------|-------------|
+| npm run start | production | Start backend only (built assets) |
+| npm run backend:dev | development | Backend with nodemon |
+| npm run dev | development | Backend (watch) only (current branch) |
+| npm run frontend | (n/a) | Vite frontend dev server |
+| npm run dev:full | development | Backend + Vite concurrently |
+| npm test | test | Run Vitest + API tests (uses TEST_MONGODB_URI) |
+| npm run seed:mongo | development | Import legacy JSON notes |
+
+Security tips:
+* Never commit real credentials. `.env` is ignored.
+* Use a least-privilege MongoDB user with `readWrite` on the specific databases only.
+* Rotate credentials if they are ever exposed.
+* A warning is logged if `TEST_MONGODB_URI` matches `MONGODB_URI` during tests.
 
 ### Import old notes
 

@@ -47,6 +47,10 @@ const rawMongo = process.env.NODE_ENV === 'test'
   ? (process.env.TEST_MONGODB_URI || process.env.MONGODB_URI || '')
   : (process.env.MONGODB_URI || '')
 export const MONGODB_URI = normalizeMongoUri(rawMongo)
+// Safety warning if test database equals production database (basic string compare)
+if (process.env.NODE_ENV === 'test' && process.env.TEST_MONGODB_URI && process.env.TEST_MONGODB_URI === process.env.MONGODB_URI) {
+  console.warn('[config] TEST_MONGODB_URI matches MONGODB_URI. Tests may affect dev/prod data!')
+}
 export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(o => o.trim())
