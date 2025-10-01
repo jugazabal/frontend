@@ -30,6 +30,13 @@ afterEach(async () => {
 })
 
 describe('Notes API', () => {
+  it('notes are returned as json', async () => {
+    await request(app)
+      .get('/api/notes')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
+
   it('creates a note', async () => {
     const res = await request(app)
       .post('/api/notes')
