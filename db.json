@@ -29,6 +29,11 @@
       "id": "6e1c",
       "content": "This is a very important note",
       "important": true
+    },
+    {
+      "id": "int1",
+      "content": "This is a note to check integration with remote and local db",
+      "important": false
     }
   ]
 }
