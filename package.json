@@ -8,13 +8,13 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "NODE_ENV=production node index.js",               
-    "backend:dev": "NODE_ENV=development nodemon index.js",
-    "dev:full": "(NODE_ENV=development node index.js &) && vite",
-    "start:prod": "npm run build && NODE_ENV=production node index.js",
-    "test": "NODE_ENV=test vitest run",
-    "test:watch": "NODE_ENV=test vitest",
-    "seed:mongo": "NODE_ENV=development node import-notes.js"
+    "start": "cross-env NODE_ENV=production node index.js",               
+    "backend:dev": "cross-env NODE_ENV=development nodemon index.js",
+    "dev:full": "cross-env-shell NODE_ENV=development \"node index.js & vite\"",
+    "start:prod": "npm run build && cross-env NODE_ENV=production node index.js",
+    "test": "cross-env NODE_ENV=test vitest run",
+    "test:watch": "cross-env NODE_ENV=test vitest",
+    "seed:mongo": "cross-env NODE_ENV=development node import-notes.js"
   },
   "dependencies": {
     "axios": "^1.7.9",
@@ -45,6 +45,7 @@
     "vite": "^7.1.7",
     "vitest": "^3.2.4",
     "supertest": "^7.1.1",
-    "mongodb-memory-server": "^10.1.4"
+    "mongodb-memory-server": "^10.1.4",
+    "cross-env": "^7.0.3"
   }
 }
