@@ -18,15 +18,14 @@ beforeAll(async () => {
   app = mod.default
   initDatabase = mod.initDatabase
   await initDatabase()
+  // Add initial notes for tests that expect them
+  await Note.create({ content: 'HTML is easy', important: false })
+  await Note.create({ content: 'Browser can execute only JavaScript', important: true })
 })
 
 afterAll(async () => {
   await mongoose.disconnect()
   if (mongoServer) await mongoServer.stop()
-})
-
-afterEach(async () => {
-  await Note.deleteMany({})
 })
 
 describe('Notes API', () => {
@@ -84,5 +83,28 @@ describe('Notes API', () => {
     const id = created.body.id
     await request(app).delete(`/api/notes/${id}`).expect(204)
     await request(app).get(`/api/notes/${id}`).expect(404)
+  })
+
+  afterEach(async () => {
+    await Note.deleteMany({})
+  })
+})
+
+describe('Notes API with initial data', () => {
+  beforeAll(async () => {
+    // Add initial notes for these tests
+    await Note.create({ content: 'HTML is easy', important: false })
+    await Note.create({ content: 'Browser can execute only JavaScript', important: true })
+  })
+
+  it('all notes are returned', async () => {
+    const response = await request(app).get('/api/notes')
+    expect(response.body).toHaveLength(2)
+  })
+
+  it('a specific note is within the returned notes', async () => {
+    const response = await request(app).get('/api/notes')
+    const contents = response.body.map(e => e.content)
+    expect(contents).toContain('HTML is easy')
   })
 })
