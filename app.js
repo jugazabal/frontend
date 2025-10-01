@@ -27,7 +27,10 @@ app.get('/health', async (_req, res) => {
   try {
     const count = await Note.countDocuments()
     res.json({ status: 'ok', notes: count })
-  } catch { res.json({ status: 'degraded', notes: null }) }
+  } catch (err) {
+    console.error('Health check error:', err.message)
+    res.json({ status: 'degraded', notes: null })
+  }
 })
 
 // API routes
