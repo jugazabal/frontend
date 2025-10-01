@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, afterEach, describe, it, expect } from 'vitest'
+import { beforeAll, afterAll, afterEach, beforeEach, describe, it, expect } from 'vitest'
 import process from 'process'
 import request from 'supertest'
 import { MongoMemoryServer } from 'mongodb-memory-server'
@@ -91,10 +91,23 @@ describe('Notes API', () => {
 })
 
 describe('Notes API with initial data', () => {
-  beforeAll(async () => {
-    // Add initial notes for these tests
-    await Note.create({ content: 'HTML is easy', important: false })
-    await Note.create({ content: 'Browser can execute only JavaScript', important: true })
+  const initialNotes = [
+    {
+      content: 'HTML is easy',
+      important: false,
+    },
+    {
+      content: 'Browser can execute only JavaScript',
+      important: true,
+    },
+  ]
+
+  beforeEach(async () => {
+    await Note.deleteMany({})
+    let noteObject = new Note(initialNotes[0])
+    await noteObject.save()
+    noteObject = new Note(initialNotes[1])
+    await noteObject.save()
   })
 
   it('all notes are returned', async () => {
