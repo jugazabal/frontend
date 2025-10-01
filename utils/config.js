@@ -1,5 +1,15 @@
 import process from 'process'
 
+// Load .env only outside production
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    // Dynamically import so production can skip if desired
+    await import('dotenv/config')
+  } catch {
+    // Silently ignore if dotenv not installed
+  }
+}
+
 export const PORT = process.env.PORT || 3001
 // Normalize Mongo URI: if user supplies a URI without an explicit database (ends with /? or just /),
 // append the default database name 'noteApp'.
