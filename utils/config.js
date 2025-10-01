@@ -42,7 +42,11 @@ function normalizeMongoUri(raw) {
   }
 }
 
-export const MONGODB_URI = normalizeMongoUri(process.env.MONGODB_URI || '')
+// Support a separate test database URI if provided.
+const rawMongo = process.env.NODE_ENV === 'test'
+  ? (process.env.TEST_MONGODB_URI || process.env.MONGODB_URI || '')
+  : (process.env.MONGODB_URI || '')
+export const MONGODB_URI = normalizeMongoUri(rawMongo)
 export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(o => o.trim())
