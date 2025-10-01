@@ -8,6 +8,7 @@
  * If the collection already has documents, import aborts unless --force is passed.
  * With --force existing notes are left untouched; duplicates (by identical content) are skipped.
  */
+import 'dotenv/config'
 import fs from 'fs/promises'
 import path from 'path'
 import process from 'process'
