@@ -120,4 +120,21 @@ describe('Notes API with initial data', () => {
     const contents = response.body.map(e => e.content)
     expect(contents).toContain('HTML is easy')
   })
+
+  it('adding a new note increases the count and includes the new note', async () => {
+    const initialResponse = await request(app).get('/api/notes')
+    expect(initialResponse.body).toHaveLength(2)
+
+    const newNote = { content: 'New test note', important: true }
+    await request(app)
+      .post('/api/notes')
+      .send(newNote)
+      .expect(201)
+
+    const updatedResponse = await request(app).get('/api/notes')
+    expect(updatedResponse.body).toHaveLength(3)
+
+    const contents = updatedResponse.body.map(e => e.content)
+    expect(contents).toContain('New test note')
+  })
 })
