@@ -1,5 +1,5 @@
 import express from 'express'
-import { connect } from 'mongoose'
+import mongoose, { connect } from 'mongoose'
 import { notesRouter } from './controllers/notes.js'
 import { commonMiddleware, unknownEndpoint, errorHandler, distPath } from './utils/middleware.js'
 import path from 'path'
@@ -58,6 +58,8 @@ export async function initDatabase() {
   try {
     await connect(MONGODB_URI)
     info('Connected to MongoDB')
+    mongoose.connection.on('disconnected', () => console.log('DB disconnected'))
+    mongoose.connection.on('error', (err) => console.error('DB error:', err.message))
   } catch (err) {
     error('MongoDB connection error:', err.message)
   }

@@ -8,6 +8,8 @@ async function start() {
   console.log('Database initialized, starting listen...')
   app.listen(PORT, () => info(`Server running on port ${PORT}`))
   console.log('Listen called')
+  // Keep the event loop alive
+  setInterval(() => {}, 1000)
 }
 
 start()
