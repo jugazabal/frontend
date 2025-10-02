@@ -13,8 +13,10 @@ import fs from 'fs/promises'
 import path from 'path'
 import process from 'process'
 import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { Note } from './models/note.js'
+import { User } from './models/user.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -32,6 +34,20 @@ async function resolveSourceFile() {
     try { await fs.access(f); return f } catch { /* continue */ }
   }
   return null
+}
+
+const IMPORT_USERNAME = process.env.IMPORT_USER_USERNAME || 'importer'
+const IMPORT_PASSWORD = process.env.IMPORT_USER_PASSWORD || 'importerpass'
+const IMPORT_NAME = process.env.IMPORT_USER_NAME || 'Import Script'
+
+async function resolveImportUser() {
+  let user = await User.findOne({ username: IMPORT_USERNAME })
+  if (!user) {
+    const passwordHash = await bcrypt.hash(IMPORT_PASSWORD, 10)
+    user = await User.create({ username: IMPORT_USERNAME, name: IMPORT_NAME, passwordHash, notes: [] })
+    console.log(`Created import user "${IMPORT_USERNAME}"`)
+  }
+  return user
 }
 
 async function main() {
@@ -63,24 +79,27 @@ async function main() {
   }
 
   await mongoose.connect(uri)
-  const existingCount = await Note.countDocuments()
+  const user = await resolveImportUser()
+  const existingCount = await Note.countDocuments({ user: user._id })
   if (existingCount && !FORCE) {
-    console.error(`Collection already has ${existingCount} docs. Use --force to merge.`)
+    console.error(`User ${user.username} already has ${existingCount} notes. Use --force to merge.`)
     process.exit(1)
   }
 
-  const existingContents = new Set((await Note.find({}, 'content')).map(n => n.content))
+  const existingContents = new Set((await Note.find({ user: user._id }, 'content')).map(n => n.content))
   const toInsert = []
   for (const item of data) {
     if (!item || typeof item !== 'object') continue
     const content = (item.content || '').trim()
     if (!content || existingContents.has(content)) continue
-    toInsert.push({ content, important: Boolean(item.important) })
+    toInsert.push({ content, important: Boolean(item.important), user: user._id })
   }
   if (!toInsert.length) {
     console.log('Nothing new to import.')
   } else {
     const inserted = await Note.insertMany(toInsert)
+    user.notes.push(...inserted.map(n => n._id))
+    await user.save()
     console.log(`Imported ${inserted.length} notes.`)
   }
   await mongoose.connection.close()

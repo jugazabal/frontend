@@ -4,8 +4,16 @@ import axios from 'axios'
 const apiBase = import.meta.env.VITE_API_BASE || ''
 const baseUrl = `${apiBase}/api/notes`
 
+let token = null
+
+const setToken = newToken => {
+  token = newToken ? `Bearer ${newToken}` : null
+}
+
+const authConfig = () => (token ? { headers: { Authorization: token } } : {})
+
 const deleteNote = id => {
-  return axios.delete(`${baseUrl}/${id}`)
+  return axios.delete(`${baseUrl}/${id}`, authConfig())
 }
 
 
@@ -21,18 +29,17 @@ const getAll = () => {
 }
 
 const create = newObject => {
-  const request = axios.post(baseUrl, newObject)
-  return request.then(response => response.data)
+  return axios.post(baseUrl, newObject, authConfig()).then(response => response.data)
 }
 
 const update = (id, newObject) => {
-  const request = axios.put(`${baseUrl}/${id}`, newObject)
-  return request.then(response => response.data)
+  return axios.put(`${baseUrl}/${id}`, newObject, authConfig()).then(response => response.data)
 }
 
 export default { 
-  getAll: getAll, 
-  create: create, 
-  update: update,
-  delete: deleteNote
+  getAll,
+  create,
+  update,
+  delete: deleteNote,
+  setToken
 }

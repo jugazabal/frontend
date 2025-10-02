@@ -4,10 +4,13 @@ import request from 'supertest'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
 import { Note } from '../models/note.js'
+import { User } from '../models/user.js'
 import { expectNotesCount, expectNotesToContain, getNotesCount } from './test_helper.js'
 
 let app
 let initDatabase
+let authToken
+let testUserId
 
 let mongoServer
 
@@ -19,9 +22,16 @@ beforeAll(async () => {
   app = mod.default
   initDatabase = mod.initDatabase
   await initDatabase()
-  // Add initial notes for tests that expect them
-  await Note.create({ content: 'HTML is easy', important: false })
-  await Note.create({ content: 'Browser can execute only JavaScript', important: true })
+  const userRes = await request(app)
+    .post('/api/users')
+    .send({ username: 'tester', name: 'Test User', password: 'password123' })
+    .expect(201)
+  testUserId = userRes.body.id
+  const loginRes = await request(app)
+    .post('/api/login')
+    .send({ username: 'tester', password: 'password123' })
+    .expect(200)
+  authToken = loginRes.body.token
 })
 
 afterAll(async () => {
@@ -40,6 +50,7 @@ describe('Notes API', () => {
   it('creates a note', async () => {
     const res = await request(app)
       .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ content: 'Integration test note', important: true })
       .expect(201)
     expect(res.body.content).toBe('Integration test note')
@@ -52,6 +63,7 @@ describe('Notes API', () => {
   it('rejects empty content', async () => {
     const res = await request(app)
       .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ content: '   ' })
       .expect(422)
     expect(res.body.error).toMatch(/non-empty/i)
@@ -61,6 +73,7 @@ describe('Notes API', () => {
     const initialCount = await getNotesCount(app)
     const res = await request(app)
       .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ important: true })
       .expect(422)
     expect(res.body.error).toMatch(/content must be a non-empty string/i)
@@ -71,33 +84,56 @@ describe('Notes API', () => {
     const longText = 'a'.repeat(501)
     const res = await request(app)
       .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ content: longText })
       .expect(422)
     expect(res.body.error).toMatch(/exceeds 500/i)
   })
 
   it('prevents duplicate content', async () => {
-    await request(app).post('/api/notes').send({ content: 'dup' }).expect(201)
-    const res = await request(app).post('/api/notes').send({ content: 'dup' }).expect(422)
+    await request(app)
+      .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ content: 'dup' })
+      .expect(201)
+    const res = await request(app)
+      .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ content: 'dup' })
+      .expect(422)
     expect(res.body.error).toMatch(/duplicate/i)
   })
 
   it('updates importance flag', async () => {
-    const created = await request(app).post('/api/notes').send({ content: 'flip', important: false })
+    const created = await request(app)
+      .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ content: 'flip', important: false })
     const id = created.body.id
-    const updated = await request(app).put(`/api/notes/${id}`).send({ important: true }).expect(200)
+    const updated = await request(app)
+      .put(`/api/notes/${id}`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ important: true })
+      .expect(200)
     expect(updated.body.important).toBe(true)
   })
 
   it('deletes a note', async () => {
-    const created = await request(app).post('/api/notes').send({ content: 'to delete' })
+    const created = await request(app)
+      .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ content: 'to delete' })
     const id = created.body.id
-    await request(app).delete(`/api/notes/${id}`).expect(204)
+    await request(app)
+      .delete(`/api/notes/${id}`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .expect(204)
     await request(app).get(`/api/notes/${id}`).expect(404)
   })
 
   afterEach(async () => {
     await Note.deleteMany({})
+    await User.updateMany({}, { $set: { notes: [] } })
   })
 })
 
@@ -115,10 +151,13 @@ describe('Notes API with initial data', () => {
 
   beforeEach(async () => {
     await Note.deleteMany({})
-    let noteObject = new Note(initialNotes[0])
-    await noteObject.save()
-    noteObject = new Note(initialNotes[1])
-    await noteObject.save()
+    const user = await User.findById(testUserId)
+    user.notes = []
+    for (const data of initialNotes) {
+      const note = await Note.create({ ...data, user: user._id })
+      user.notes.push(note._id)
+    }
+    await user.save()
   })
 
   it('all notes are returned', async () => {
@@ -138,6 +177,7 @@ describe('Notes API with initial data', () => {
     const newNote = { content: 'New test note', important: true }
     await request(app)
       .post('/api/notes')
+      .set('Authorization', `Bearer ${authToken}`)
       .send(newNote)
       .expect(201)
 
@@ -150,7 +190,10 @@ describe('Notes API with initial data', () => {
     expect(notesAtStart).toHaveLength(2)
     const noteToDelete = notesAtStart[0]
 
-    await request(app).delete(`/api/notes/${noteToDelete.id}`).expect(204)
+    await request(app)
+      .delete(`/api/notes/${noteToDelete.id}`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .expect(204)
 
     const noteInDb = await Note.findById(noteToDelete.id)
     expect(noteInDb).toBeNull()

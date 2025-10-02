@@ -1,6 +1,8 @@
 import express from 'express'
 import mongoose, { connect } from 'mongoose'
 import { notesRouter } from './controllers/notes.js'
+import { usersRouter } from './controllers/users.js'
+import { loginRouter } from './controllers/login.js'
 import { commonMiddleware, unknownEndpoint, errorHandler, distPath } from './utils/middleware.js'
 import path from 'path'
 import { MONGODB_URI } from './utils/config.js'
@@ -34,6 +36,8 @@ app.get('/health', async (_req, res) => {
 })
 
 // API routes
+app.use('/api/login', loginRouter)
+app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
 
 // SPA fallback (after API) - any GET not starting with /api

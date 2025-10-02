@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { Note } from '../models/note.js'
+import { authenticate } from '../utils/auth.js'
+import { User } from '../models/user.js'
 
 export const notesRouter = Router()
 
 // GET all
 notesRouter.get('/', async (_req, res, next) => {
   try {
-    const notes = await Note.find({})
+    const notes = await Note.find({}).populate('user', { username: 1, name: 1 })
     res.json(notes.map(n => n.toJSON()))
   } catch (err) { next(err) }
 })
@@ -14,14 +16,14 @@ notesRouter.get('/', async (_req, res, next) => {
 // GET one
 notesRouter.get('/:id', async (req, res, next) => {
   try {
-    const note = await Note.findById(req.params.id)
+    const note = await Note.findById(req.params.id).populate('user', { username: 1, name: 1 })
     if (!note) return res.status(404).end()
     res.json(note.toJSON())
   } catch (err) { next(err) }
 })
 
 // POST create
-notesRouter.post('/', async (req, res, next) => {
+notesRouter.post('/', authenticate, async (req, res, next) => {
   try {
     const { content, important } = req.body || {}
     if (typeof content !== 'string' || !content.trim()) {
@@ -35,13 +37,17 @@ notesRouter.post('/', async (req, res, next) => {
     if (existing) {
       return res.status(422).json({ error: 'duplicate note content' })
     }
-    const note = await Note.create({ content: content.trim(), important: important === true })
-    res.status(201).json(note.toJSON())
+    const user = req.user
+    const note = await Note.create({ content: content.trim(), important: important === true, user: user._id })
+    user.notes.push(note._id)
+    await user.save()
+    const populated = await note.populate('user', { username: 1, name: 1 })
+    res.status(201).json(populated.toJSON())
   } catch (err) { next(err) }
 })
 
 // PUT update
-notesRouter.put('/:id', async (req, res, next) => {
+notesRouter.put('/:id', authenticate, async (req, res, next) => {
   try {
     const body = req.body || {}
     if (body.content === undefined && body.important === undefined) {
@@ -64,17 +70,28 @@ notesRouter.put('/:id', async (req, res, next) => {
       update.content = trimmed
     }
     if (body.important !== undefined) update.important = body.important === true
-    const updated = await Note.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true })
-    if (!updated) return res.status(404).json({ error: 'note not found' })
-    res.json(updated.toJSON())
+    const note = await Note.findById(req.params.id)
+    if (!note) return res.status(404).json({ error: 'note not found' })
+    if (note.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'forbidden' })
+    }
+    Object.assign(note, update)
+    await note.save()
+    const populated = await note.populate('user', { username: 1, name: 1 })
+    res.json(populated.toJSON())
   } catch (err) { next(err) }
 })
 
 // DELETE
-notesRouter.delete('/:id', async (req, res, next) => {
+notesRouter.delete('/:id', authenticate, async (req, res, next) => {
   try {
-    const deleted = await Note.findByIdAndDelete(req.params.id)
-    if (!deleted) return res.status(404).end()
+    const note = await Note.findById(req.params.id)
+    if (!note) return res.status(404).end()
+    if (note.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'forbidden' })
+    }
+    await note.deleteOne()
+    await User.findByIdAndUpdate(note.user, { $pull: { notes: note._id } })
     res.status(204).end()
   } catch (err) { next(err) }
 })
