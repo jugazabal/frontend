@@ -56,6 +56,17 @@ describe('Notes API', () => {
     expect(res.body.error).toMatch(/non-empty/i)
   })
 
+  it('rejects note without content', async () => {
+    const initialCount = await Note.countDocuments()
+    const res = await request(app)
+      .post('/api/notes')
+      .send({ important: true })
+      .expect(422)
+    expect(res.body.error).toMatch(/content must be a non-empty string/i)
+    const finalCount = await Note.countDocuments()
+    expect(finalCount).toBe(initialCount)
+  })
+
   it('enforces maxlength 500', async () => {
     const longText = 'a'.repeat(501)
     const res = await request(app)
