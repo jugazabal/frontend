@@ -4,6 +4,7 @@ import request from 'supertest'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import mongoose from 'mongoose'
 import { Note } from '../models/note.js'
+import { expectNotesCount, expectNotesToContain, getNotesCount } from './test_helper.js'
 
 let app
 let initDatabase
@@ -57,14 +58,13 @@ describe('Notes API', () => {
   })
 
   it('rejects note without content', async () => {
-    const initialCount = await Note.countDocuments()
+    const initialCount = await getNotesCount(app)
     const res = await request(app)
       .post('/api/notes')
       .send({ important: true })
       .expect(422)
     expect(res.body.error).toMatch(/content must be a non-empty string/i)
-    const finalCount = await Note.countDocuments()
-    expect(finalCount).toBe(initialCount)
+    await expectNotesCount(app, initialCount)
   })
 
   it('enforces maxlength 500', async () => {
@@ -133,8 +133,7 @@ describe('Notes API with initial data', () => {
   })
 
   it('adding a new note increases the count and includes the new note', async () => {
-    const initialResponse = await request(app).get('/api/notes')
-    expect(initialResponse.body).toHaveLength(2)
+    await expectNotesCount(app, 2)
 
     const newNote = { content: 'New test note', important: true }
     await request(app)
@@ -142,10 +141,7 @@ describe('Notes API with initial data', () => {
       .send(newNote)
       .expect(201)
 
-    const updatedResponse = await request(app).get('/api/notes')
-    expect(updatedResponse.body).toHaveLength(3)
-
-    const contents = updatedResponse.body.map(e => e.content)
-    expect(contents).toContain('New test note')
+    await expectNotesCount(app, 3)
+    await expectNotesToContain(app, 'New test note')
   })
 })
