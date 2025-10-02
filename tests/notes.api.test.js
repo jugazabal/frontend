@@ -144,4 +144,19 @@ describe('Notes API with initial data', () => {
     await expectNotesCount(app, 3)
     await expectNotesToContain(app, 'New test note')
   })
+
+  it('deleting a note decreases the count and removes the note from the list', async () => {
+    await expectNotesCount(app, 2)
+
+    const response = await request(app).get('/api/notes')
+    const noteToDelete = response.body[0]
+    const id = noteToDelete.id
+
+    await request(app).delete(`/api/notes/${id}`).expect(204)
+
+    await expectNotesCount(app, 1)
+
+    const contents = (await request(app).get('/api/notes')).body.map(e => e.content)
+    expect(contents).not.toContain(noteToDelete.content)
+  })
 })
