@@ -36,8 +36,8 @@ app.get('/', (_req, res) => {
 // Serve static assets under the base path used by Vite
 app.use('/frontend', express.static(distPath))
 
-// Ensure the base SPA route renders the index file
-app.get('/frontend', async (_req, res, next) => {
+// SPA fallback for any frontend route when static assets miss
+app.get(/^\/frontend(\/.*)?$/, async (_req, res, next) => {
   return sendIndex(res, true).catch(next)
 })
 
@@ -57,11 +57,6 @@ app.get('/health', async (_req, res) => {
 app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
-
-// SPA fallback for routes under the frontend base path
-app.get('/frontend/:path*', async (_req, res, next) => {
-  return sendIndex(res).catch(next)
-})
 
 // Any other non-API route falls back to SPA entry (with simple message if build missing)
 app.get(/^(?!\/api).*/, async (_req, res, next) => {
