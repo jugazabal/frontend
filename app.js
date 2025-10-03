@@ -36,6 +36,11 @@ app.get('/', (_req, res) => {
 // Serve static assets under the base path used by Vite
 app.use('/frontend', express.static(distPath))
 
+// Ensure the base SPA route renders the index file
+app.get('/frontend', async (_req, res, next) => {
+  return sendIndex(res, true).catch(next)
+})
+
 // Health endpoint
 import { Note } from './models/note.js'
 app.get('/health', async (_req, res) => {
@@ -54,7 +59,7 @@ app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
 
 // SPA fallback for routes under the frontend base path
-app.get('/frontend/:path(*)', async (_req, res, next) => {
+app.get('/frontend/:path*', async (_req, res, next) => {
   return sendIndex(res).catch(next)
 })
 
