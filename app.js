@@ -54,7 +54,7 @@ app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
 
 // SPA fallback for routes under the frontend base path
-app.get('/frontend/*', async (_req, res, next) => {
+app.get('/frontend/:path(*)', async (_req, res, next) => {
   return sendIndex(res).catch(next)
 })
 
