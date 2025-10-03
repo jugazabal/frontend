@@ -1,10 +1,11 @@
 import express from 'express'
 import mongoose, { connect } from 'mongoose'
+import path from 'path'
+import { readFile } from 'fs/promises'
 import { notesRouter } from './controllers/notes.js'
 import { usersRouter } from './controllers/users.js'
 import { loginRouter } from './controllers/login.js'
 import { commonMiddleware, unknownEndpoint, errorHandler, distPath } from './utils/middleware.js'
-import path from 'path'
 import { MONGODB_URI } from './utils/config.js'
 import { info, warn, error } from './utils/logger.js'
 
@@ -13,15 +14,27 @@ const app = express()
 // Apply common middleware
 commonMiddleware.forEach(mw => app.use(mw))
 
-// Root / (optional static index fallback already handled by express.static)
-app.get('/', (req, res, next) => {
-  const indexFile = path.join(distPath, 'index.html')
-  import('fs/promises').then(fs => {
-    fs.readFile(indexFile, 'utf8')
-      .then(() => res.sendFile(indexFile))
-      .catch(() => res.send('<h1>Notes App Backend</h1><p>Build the frontend to serve the React app.</p>'))
-  }).catch(next)
+const indexFile = path.join(distPath, 'index.html')
+
+async function sendIndex(res, allowFallback = false) {
+  try {
+    await readFile(indexFile, 'utf8')
+    return res.sendFile(indexFile)
+  } catch (err) {
+    if (allowFallback) {
+      return res.send('<h1>Notes App Backend</h1><p>Build the frontend to serve the React app.</p>')
+    }
+    throw err
+  }
+}
+
+// Redirect bare root to the SPA base path to align with Vite base
+app.get('/', (_req, res) => {
+  res.redirect(302, '/frontend/')
 })
+
+// Serve static assets under the base path used by Vite
+app.use('/frontend', express.static(distPath))
 
 // Health endpoint
 import { Note } from './models/note.js'
@@ -40,14 +53,14 @@ app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
 
-// SPA fallback (after API) - any GET not starting with /api
-app.get(/^(?!\/api).*/, (req, res, next) => {
-  const indexFile = path.join(distPath, 'index.html')
-  import('fs/promises').then(fs => {
-    fs.readFile(indexFile, 'utf8')
-      .then(() => res.sendFile(indexFile))
-      .catch(() => next())
-  }).catch(next)
+// SPA fallback for routes under the frontend base path
+app.get('/frontend/*', async (_req, res, next) => {
+  return sendIndex(res).catch(next)
+})
+
+// Any other non-API route falls back to SPA entry (with simple message if build missing)
+app.get(/^(?!\/api).*/, async (_req, res, next) => {
+  return sendIndex(res, true).catch(next)
 })
 
 // 404 and error handlers
