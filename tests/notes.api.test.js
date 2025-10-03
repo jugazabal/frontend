@@ -55,9 +55,14 @@ describe('Notes API', () => {
       .expect(201)
     expect(res.body.content).toBe('Integration test note')
     expect(res.body.important).toBe(true)
+    expect(res.body.user).toBeDefined()
+    expect(res.body.user.id).toEqual(testUserId)
 
     const list = await request(app).get('/api/notes').expect(200)
     expect(list.body).toHaveLength(1)
+    const owner = await User.findById(testUserId).populate('notes')
+    expect(owner.notes).toHaveLength(1)
+    expect(owner.notes[0].content).toBe('Integration test note')
   })
 
   it('rejects empty content', async () => {
