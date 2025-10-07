@@ -10,7 +10,7 @@ const LOCAL_STORAGE_KEY = 'loggedNoteAppUser'
 const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
-  const [showAll, setShowAll] = useState(true)
+  const [filter, setFilter] = useState('all')
   const [errorMessage, setErrorMessage] = useState(null)
   const [user, setUser] = useState(null)
   const [username, setUsername] = useState('')
@@ -65,8 +65,11 @@ const App = () => {
   useEffect(() => {
     if (!user) {
       notesService.setToken(null)
+      if (filter === 'mine') {
+        setFilter('all')
+      }
     }
-  }, [user])
+  }, [user, filter])
 
   const handleLogout = () => {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY)
@@ -203,7 +206,15 @@ const App = () => {
     setNewNote(event.target.value)
   }
 
-  const notesToShow = showAll ? notes : notes.filter((note) => note.important)
+  const notesToShow = notes.filter((note) => {
+    if (filter === 'important') {
+      return note.important
+    }
+    if (filter === 'mine') {
+      return isOwner(note)
+    }
+    return true
+  })
 
   return (
     <div className="app-container">
@@ -238,11 +249,40 @@ const App = () => {
         </form>
       )}
 
-      <div style={{ marginTop: '1rem' }}>
-        <button onClick={() => setShowAll(!showAll)}>
-          show {showAll ? 'important' : 'all'}
-        </button>
-      </div>
+      <fieldset style={{ marginTop: '1rem' }}>
+        <legend>Filter notes</legend>
+        <label style={{ marginRight: '1rem' }}>
+          <input
+            type="radio"
+            name="note-filter"
+            value="all"
+            checked={filter === 'all'}
+            onChange={() => setFilter('all')}
+          />
+          <span style={{ marginLeft: '0.3rem' }}>All</span>
+        </label>
+        <label style={{ marginRight: '1rem' }}>
+          <input
+            type="radio"
+            name="note-filter"
+            value="important"
+            checked={filter === 'important'}
+            onChange={() => setFilter('important')}
+          />
+          <span style={{ marginLeft: '0.3rem' }}>Important only</span>
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="note-filter"
+            value="mine"
+            checked={filter === 'mine'}
+            onChange={() => setFilter('mine')}
+            disabled={!user}
+          />
+          <span style={{ marginLeft: '0.3rem' }}>{user ? 'Created by me' : 'Created by me (login required)'}</span>
+        </label>
+      </fieldset>
       <ul>
         {notesToShow.map((note) => (
           <Note
