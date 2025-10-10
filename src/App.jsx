@@ -1,10 +1,10 @@
 // ...existing code...
 import { useState, useEffect, useRef } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import notesService from './services/notes'
 import loginService from './services/login'
 import Note from './components/Note'
 import Notification from './components/Notification'
+import useNotesData from './hooks/useNotesData'
 
 const LOCAL_STORAGE_KEY = 'loggedNoteAppUser'
 
@@ -16,7 +16,6 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const notificationTimeout = useRef(null)
-  const queryClient = useQueryClient()
 
   const notify = (message, duration = 5000) => {
     if (notificationTimeout.current) {
@@ -62,84 +61,6 @@ const App = () => {
     }
   }, [user, filter])
 
-  const {
-    data: notes = [],
-    isLoading: notesLoading,
-    isError: notesError,
-    error: notesErrorObj
-  } = useQuery({
-    queryKey: ['notes'],
-    queryFn: notesService.getAll,
-    retry: false
-  })
-
-  const appendNoteToCache = (createdNote) => {
-    queryClient.setQueryData(['notes'], (old = []) => old.concat(createdNote))
-  }
-
-  const replaceNoteInCache = (updatedNote) => {
-    queryClient.setQueryData(['notes'], (old = []) =>
-      old.map(n => (n.id === updatedNote.id ? updatedNote : n))
-    )
-  }
-
-  const removeNoteFromCache = (id) => {
-    queryClient.setQueryData(['notes'], (old = []) =>
-      old.filter(n => n.id !== id)
-    )
-  }
-
-  useEffect(() => {
-    if (notesError) {
-      console.error(notesErrorObj)
-      notify('Failed to load notes. Check API configuration.')
-    }
-  }, [notesError, notesErrorObj])
-
-  const createNoteMutation = useMutation({
-    mutationFn: notesService.create,
-    onSuccess: (createdNote) => {
-      appendNoteToCache(createdNote)
-    },
-    onError: (err) => {
-      if (!handleAuthError(err)) {
-        notify(err.response?.data?.error || 'Failed to create note')
-      }
-    }
-  })
-
-  const updateNoteMutation = useMutation({
-    mutationFn: ({ id, data }) => notesService.update(id, data),
-    onSuccess: (updatedNote) => {
-      replaceNoteInCache(updatedNote)
-    },
-    onError: (err, variables) => {
-      if (handleAuthError(err)) return
-      if (err?.response?.status === 404 && variables?.originalNote) {
-        notify(`The note '${variables.originalNote.content}' was already deleted from server`, 4000)
-        removeNoteFromCache(variables.originalNote.id)
-      } else {
-        notify(err?.response?.data?.error || `Failed to update note`)
-      }
-    }
-  })
-
-  const deleteNoteMutation = useMutation({
-    mutationFn: ({ id }) => notesService.delete(id),
-    onSuccess: (_, variables) => {
-      removeNoteFromCache(variables.id)
-    },
-    onError: (err, variables) => {
-      if (handleAuthError(err)) return
-      if (err?.response?.status === 404) {
-        notify('Note was already removed from server.', 3000)
-        removeNoteFromCache(variables?.id)
-      } else {
-        notify(err?.response?.data?.error || 'Failed to delete note')
-      }
-    }
-  })
-
   const handleLogout = () => {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY)
     setUser(null)
@@ -159,6 +80,23 @@ const App = () => {
     }
     return false
   }
+
+  const {
+    notes,
+    isLoading: notesLoading,
+    isError: notesError,
+    error: notesErrorObj,
+    createNote,
+    updateNote,
+    deleteNote: deleteNoteFromServer
+  } = useNotesData({ notify, handleAuthError })
+
+  useEffect(() => {
+    if (notesError) {
+      console.error(notesErrorObj)
+      notify('Failed to load notes. Check API configuration.')
+    }
+  }, [notesError, notesErrorObj])
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -195,7 +133,7 @@ const App = () => {
       return
     }
     if (window.confirm('Delete this note?')) {
-      deleteNoteMutation.mutate({ id })
+      deleteNoteFromServer({ id: note.id, note })
     }
   }
 
@@ -211,7 +149,7 @@ const App = () => {
       return
     }
     const changedNote = { important: !note.important }
-    updateNoteMutation.mutate({ id, data: changedNote, originalNote: note })
+    updateNote({ id: note.id, data: changedNote, note })
   }
 
   const addNote = (event) => {
@@ -233,7 +171,7 @@ const App = () => {
       content: trimmed,
       important: Math.random() > 0.5
     }
-    createNoteMutation.mutate(noteObject, {
+    createNote(noteObject, {
       onSuccess: () => {
         setNewNote('')
       }
