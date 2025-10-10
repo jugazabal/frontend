@@ -1,5 +1,6 @@
 // ...existing code...
 import { useState, useEffect, useRef } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import notesService from './services/notes'
 import loginService from './services/login'
 import Note from './components/Note'
@@ -8,7 +9,6 @@ import Notification from './components/Notification'
 const LOCAL_STORAGE_KEY = 'loggedNoteAppUser'
 
 const App = () => {
-  const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
   const [filter, setFilter] = useState('all')
   const [errorMessage, setErrorMessage] = useState(null)
@@ -16,6 +16,7 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const notificationTimeout = useRef(null)
+  const queryClient = useQueryClient()
 
   const notify = (message, duration = 5000) => {
     if (notificationTimeout.current) {
@@ -53,16 +54,6 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    notesService
-      .getAll()
-      .then(data => setNotes(data))
-      .catch(err => {
-        console.error(err)
-        notify('Failed to load notes. Check API configuration.')
-      })
-  }, [])
-
-  useEffect(() => {
     if (!user) {
       notesService.setToken(null)
       if (filter === 'mine') {
@@ -70,6 +61,84 @@ const App = () => {
       }
     }
   }, [user, filter])
+
+  const {
+    data: notes = [],
+    isLoading: notesLoading,
+    isError: notesError,
+    error: notesErrorObj
+  } = useQuery({
+    queryKey: ['notes'],
+    queryFn: notesService.getAll,
+    retry: false
+  })
+
+  const appendNoteToCache = (createdNote) => {
+    queryClient.setQueryData(['notes'], (old = []) => old.concat(createdNote))
+  }
+
+  const replaceNoteInCache = (updatedNote) => {
+    queryClient.setQueryData(['notes'], (old = []) =>
+      old.map(n => (n.id === updatedNote.id ? updatedNote : n))
+    )
+  }
+
+  const removeNoteFromCache = (id) => {
+    queryClient.setQueryData(['notes'], (old = []) =>
+      old.filter(n => n.id !== id)
+    )
+  }
+
+  useEffect(() => {
+    if (notesError) {
+      console.error(notesErrorObj)
+      notify('Failed to load notes. Check API configuration.')
+    }
+  }, [notesError, notesErrorObj])
+
+  const createNoteMutation = useMutation({
+    mutationFn: notesService.create,
+    onSuccess: (createdNote) => {
+      appendNoteToCache(createdNote)
+    },
+    onError: (err) => {
+      if (!handleAuthError(err)) {
+        notify(err.response?.data?.error || 'Failed to create note')
+      }
+    }
+  })
+
+  const updateNoteMutation = useMutation({
+    mutationFn: ({ id, data }) => notesService.update(id, data),
+    onSuccess: (updatedNote) => {
+      replaceNoteInCache(updatedNote)
+    },
+    onError: (err, variables) => {
+      if (handleAuthError(err)) return
+      if (err?.response?.status === 404 && variables?.originalNote) {
+        notify(`The note '${variables.originalNote.content}' was already deleted from server`, 4000)
+        removeNoteFromCache(variables.originalNote.id)
+      } else {
+        notify(err?.response?.data?.error || `Failed to update note`)
+      }
+    }
+  })
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: ({ id }) => notesService.delete(id),
+    onSuccess: (_, variables) => {
+      removeNoteFromCache(variables.id)
+    },
+    onError: (err, variables) => {
+      if (handleAuthError(err)) return
+      if (err?.response?.status === 404) {
+        notify('Note was already removed from server.', 3000)
+        removeNoteFromCache(variables?.id)
+      } else {
+        notify(err?.response?.data?.error || 'Failed to delete note')
+      }
+    }
+  })
 
   const handleLogout = () => {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY)
@@ -126,20 +195,7 @@ const App = () => {
       return
     }
     if (window.confirm('Delete this note?')) {
-      notesService
-        .delete(id)
-        .then(() => {
-          setNotes(notes.filter(n => n.id !== id))
-        })
-        .catch(err => {
-          if (handleAuthError(err)) return
-          if (err.response?.status === 404) {
-            notify('Note was already removed from server.', 3000)
-            setNotes(notes.filter(n => n.id !== id))
-          } else {
-            notify(err.response?.data?.error || 'Failed to delete note')
-          }
-        })
+      deleteNoteMutation.mutate({ id })
     }
   }
 
@@ -155,20 +211,7 @@ const App = () => {
       return
     }
     const changedNote = { important: !note.important }
-    notesService
-      .update(id, changedNote)
-      .then(returnedNote => {
-        setNotes(notes.map(n => n.id === id ? returnedNote : n))
-      })
-      .catch(err => {
-        if (handleAuthError(err)) return
-        if (err.response?.status === 404) {
-          notify(`The note '${note.content}' was already deleted from server`, 4000)
-          setNotes(notes.filter(n => n.id !== id))
-        } else {
-          notify(err.response?.data?.error || `Failed to update '${note.content}'`)
-        }
-      })
+    updateNoteMutation.mutate({ id, data: changedNote, originalNote: note })
   }
 
   const addNote = (event) => {
@@ -190,16 +233,11 @@ const App = () => {
       content: trimmed,
       important: Math.random() > 0.5
     }
-    notesService
-      .create(noteObject)
-      .then(data => {
-        setNotes(notes.concat(data))
+    createNoteMutation.mutate(noteObject, {
+      onSuccess: () => {
         setNewNote('')
-      })
-      .catch(err => {
-        if (handleAuthError(err)) return
-        notify(err.response?.data?.error || 'Failed to create note')
-      })
+      }
+    })
   }
 
   const handleNoteChange = (event) => {
@@ -283,6 +321,7 @@ const App = () => {
           <span style={{ marginLeft: '0.3rem' }}>{user ? 'Created by me' : 'Created by me (login required)'}</span>
         </label>
       </fieldset>
+      {notesLoading && <p>Loading notes...</p>}
       <ul>
         {notesToShow.map((note) => (
           <Note
