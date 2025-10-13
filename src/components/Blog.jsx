@@ -1,16 +1,16 @@
 
-const Note = ({ note, onToggle, onDelete, canModify }) => {
-  const owner = note.user?.name || note.user?.username
+const Blog = ({ blog, onToggle, onDelete, canModify }) => {
+  const owner = blog.user?.name || blog.user?.username
   return (
     <li>
-      <span>{note.content}</span>
+      <span>{blog.content}</span>
       {owner && <span style={{ marginLeft: '0.5em', fontStyle: 'italic', color: '#555' }}>— {owner}</span>}
       <button
         onClick={onToggle}
         disabled={!canModify}
         style={{
-          color: note.important ? 'red' : 'blue',
-          borderColor: note.important ? 'red' : 'blue',
+          color: blog.important ? 'red' : 'blue',
+          borderColor: blog.important ? 'red' : 'blue',
           borderWidth: '1px',
           borderStyle: 'solid',
           background: 'white',
@@ -20,7 +20,7 @@ const Note = ({ note, onToggle, onDelete, canModify }) => {
           opacity: canModify ? 1 : 0.5
         }}
       >
-        make {note.important ? 'not important' : 'important'}
+        make {blog.important ? 'not important' : 'important'}
       </button>
       <button
         onClick={onDelete}
@@ -38,4 +38,4 @@ const Note = ({ note, onToggle, onDelete, canModify }) => {
   )
 }
 
-export default Note
+export default Blog

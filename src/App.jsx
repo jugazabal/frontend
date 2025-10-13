@@ -1,20 +1,25 @@
 // ...existing code...
-import { useState, useEffect, useRef } from 'react'
-import notesService from './services/notes'
-import loginService from './services/login'
-import Note from './components/Note'
+import { useEffect, useRef } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { useSelector, useDispatch } from 'react-redux'
+import blogsService from './services/blogs'
+import Navigation from './components/Navigation'
+import Home from './components/Home'
+import Blogs from './components/Blogs'
+import Users from './components/Users'
+import User from './components/User'
+import BlogDetail from './components/BlogDetail'
+import Login from './components/Login'
 import Notification from './components/Notification'
-import useNotesData from './hooks/useNotesData'
+import { setUser, clearUser } from './reducers/userReducer'
+import { setNotification, clearNotification } from './reducers/notificationReducer'
 
-const LOCAL_STORAGE_KEY = 'loggedNoteAppUser'
+const LOCAL_STORAGE_KEY = 'loggedBlogAppUser'
 
 const App = () => {
-  const [newNote, setNewNote] = useState('')
-  const [filter, setFilter] = useState('all')
-  const [errorMessage, setErrorMessage] = useState(null)
-  const [user, setUser] = useState(null)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const dispatch = useDispatch()
+  const user = useSelector(state => state.user)
+  const notification = useSelector(state => state.notification)
   const notificationTimeout = useRef(null)
 
   const notify = (message, duration = 5000) => {
@@ -22,10 +27,10 @@ const App = () => {
       clearTimeout(notificationTimeout.current)
       notificationTimeout.current = null
     }
-    setErrorMessage(message)
+    dispatch(setNotification(message))
     if (message) {
       notificationTimeout.current = setTimeout(() => {
-        setErrorMessage(null)
+        dispatch(clearNotification())
         notificationTimeout.current = null
       }, duration)
     }
@@ -36,9 +41,9 @@ const App = () => {
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
-        setUser(parsed)
+        dispatch(setUser(parsed))
         if (parsed.token) {
-          notesService.setToken(parsed.token)
+          blogsService.setToken(parsed.token)
         }
       } catch (err) {
         console.warn('Failed to parse stored user, clearing it', err)
@@ -50,21 +55,18 @@ const App = () => {
         clearTimeout(notificationTimeout.current)
       }
     }
-  }, [])
+  }, [dispatch])
 
   useEffect(() => {
     if (!user) {
-      notesService.setToken(null)
-      if (filter === 'mine') {
-        setFilter('all')
-      }
+      blogsService.setToken(null)
     }
-  }, [user, filter])
+  }, [user])
 
   const handleLogout = () => {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY)
-    setUser(null)
-    notesService.setToken(null)
+    dispatch(clearUser())
+    blogsService.setToken(null)
   }
 
   const handleAuthError = (err) => {
@@ -75,210 +77,24 @@ const App = () => {
       return true
     }
     if (status === 403) {
-      notify('You can only modify your own notes.')
+      notify('You can only modify your own blogs.')
       return true
     }
     return false
   }
 
-  const {
-    notes,
-    isLoading: notesLoading,
-    isError: notesError,
-    error: notesErrorObj,
-    createNote,
-    updateNote,
-    deleteNote: deleteNoteFromServer
-  } = useNotesData({ notify, handleAuthError })
-
-  useEffect(() => {
-    if (notesError) {
-      console.error(notesErrorObj)
-      notify('Failed to load notes. Check API configuration.')
-    }
-  }, [notesError, notesErrorObj])
-
-  const handleLogin = async (event) => {
-    event.preventDefault()
-    try {
-      const credentials = { username: username.trim(), password }
-      const loggedUser = await loginService.login(credentials)
-      setUser(loggedUser)
-      notesService.setToken(loggedUser.token)
-      window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loggedUser))
-      setUsername('')
-      setPassword('')
-      notify(`Logged in as ${loggedUser.name || loggedUser.username}`, 3000)
-    } catch (err) {
-      notify(err.response?.data?.error || 'Invalid username or password')
-    }
-  }
-
-  const isOwner = (note) => {
-    const ownerId = typeof note.user === 'object' && note.user !== null
-      ? note.user.id
-      : note.user
-    return Boolean(user && ownerId && user.id === ownerId)
-  }
-
-  const deleteNote = id => {
-    const note = notes.find(n => n.id === id)
-    if (!note) return
-    if (!user) {
-      notify('Login to delete notes.')
-      return
-    }
-    if (!isOwner(note)) {
-      notify('You can only delete your own notes.')
-      return
-    }
-    if (window.confirm('Delete this note?')) {
-      deleteNoteFromServer({ id: note.id, note })
-    }
-  }
-
-  const toggleImportanceOf = id => {
-    const note = notes.find(n => n.id === id)
-    if (!note) return
-    if (!user) {
-      notify('Login to update notes.')
-      return
-    }
-    if (!isOwner(note)) {
-      notify('You can only update your own notes.')
-      return
-    }
-    const changedNote = { important: !note.important }
-    updateNote({ id: note.id, data: changedNote, note })
-  }
-
-  const addNote = (event) => {
-    event.preventDefault()
-    if (!user) {
-      notify('Login to add notes.', 4000)
-      return
-    }
-    const trimmed = newNote.trim()
-    if (!trimmed) {
-      notify('Note content cannot be empty', 4000)
-      return
-    }
-    if (trimmed.length > 500) {
-      notify('Note content exceeds 500 characters limit', 4000)
-      return
-    }
-    const noteObject = {
-      content: trimmed,
-      important: Math.random() > 0.5
-    }
-    createNote(noteObject, {
-      onSuccess: () => {
-        setNewNote('')
-      }
-    })
-  }
-
-  const handleNoteChange = (event) => {
-    setNewNote(event.target.value)
-  }
-
-  const notesToShow = notes.filter((note) => {
-    if (filter === 'important') {
-      return note.important
-    }
-    if (filter === 'mine') {
-      return isOwner(note)
-    }
-    return true
-  })
-
   return (
     <div className="app-container">
-      <h1>Notes</h1>
-      <Notification message={errorMessage} />
-
-      {user ? (
-        <div className="user-info">
-          <span>{user.name || user.username} logged in</span>
-          <button onClick={handleLogout} style={{ marginLeft: '1rem' }}>logout</button>
-        </div>
-      ) : (
-        <form onSubmit={handleLogin} className="login-form">
-          <div>
-            username{' '}
-            <input
-              value={username}
-              onChange={({ target }) => setUsername(target.value)}
-              autoComplete="username"
-            />
-          </div>
-          <div>
-            password{' '}
-            <input
-              type="password"
-              value={password}
-              onChange={({ target }) => setPassword(target.value)}
-              autoComplete="current-password"
-            />
-          </div>
-          <button type="submit">login</button>
-        </form>
-      )}
-
-      <fieldset style={{ marginTop: '1rem' }}>
-        <legend>Filter notes</legend>
-        <label style={{ marginRight: '1rem' }}>
-          <input
-            type="radio"
-            name="note-filter"
-            value="all"
-            checked={filter === 'all'}
-            onChange={() => setFilter('all')}
-          />
-          <span style={{ marginLeft: '0.3rem' }}>All</span>
-        </label>
-        <label style={{ marginRight: '1rem' }}>
-          <input
-            type="radio"
-            name="note-filter"
-            value="important"
-            checked={filter === 'important'}
-            onChange={() => setFilter('important')}
-          />
-          <span style={{ marginLeft: '0.3rem' }}>Important only</span>
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="note-filter"
-            value="mine"
-            checked={filter === 'mine'}
-            onChange={() => setFilter('mine')}
-            disabled={!user}
-          />
-          <span style={{ marginLeft: '0.3rem' }}>{user ? 'Created by me' : 'Created by me (login required)'}</span>
-        </label>
-      </fieldset>
-      {notesLoading && <p>Loading notes...</p>}
-      <ul>
-        {notesToShow.map((note) => (
-          <Note
-            key={note.id}
-            note={note}
-            onToggle={() => toggleImportanceOf(note.id)}
-            onDelete={() => deleteNote(note.id)}
-            canModify={isOwner(note)}
-          />
-        ))}
-      </ul>
-      {user ? (
-        <form onSubmit={addNote}>
-          <input value={newNote} onChange={handleNoteChange} />
-          <button type="submit">save</button>
-        </form>
-      ) : (
-        <p>Log in to add new notes.</p>
-      )}
+      <Navigation user={user} handleLogout={handleLogout} />
+      <Notification message={notification} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/blogs" element={<Blogs user={user} notify={notify} handleAuthError={handleAuthError} />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/users/:id" element={<User />} />
+        <Route path="/blogs/:id" element={<BlogDetail />} />
+        <Route path="/login" element={<Login setUser={(user) => dispatch(setUser(user))} notify={notify} />} />
+      </Routes>
     </div>
   )
 }
