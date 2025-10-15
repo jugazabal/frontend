@@ -1,85 +1,53 @@
-import { Link } from 'react-router-dom'
-import { Navbar, Nav, Container, Button, Form } from 'react-bootstrap'
+import { Link, useLocation } from 'react-router-dom'
 
 const Navigation = ({ user, handleLogout, themeMode, onToggleTheme }) => {
+  const location = useLocation()
+  const links = [
+    { to: '/', label: 'home' },
+    { to: '/blogs', label: 'notes' },
+    { to: '/users', label: 'users' },
+    { to: '/login', label: 'login' }
+  ]
+
   const isDark = themeMode === 'dark'
 
   return (
-    <Navbar
-      bg={isDark ? 'dark' : 'light'}
-      data-bs-theme={themeMode}
-      variant={isDark ? 'dark' : 'light'}
-      expand="md"
-      className="rounded shadow-sm mb-4"
-    >
-      <Container fluid>
-        <Navbar.Brand
-          as={Link}
-          to="/"
-          className={isDark ? 'text-light fw-semibold' : 'text-dark fw-semibold'}
-        >
-          Blog App
-        </Navbar.Brand>
-        <Navbar.Toggle aria-controls="app-navigation" />
-        <Navbar.Collapse id="app-navigation">
-          <Nav className="me-auto">
-            <Nav.Link as={Link} to="/" className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}>
-              Home
-            </Nav.Link>
-            <Nav.Link
-              as={Link}
-              to="/blogs"
-              className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}
-            >
-              Blogs
-            </Nav.Link>
-            <Nav.Link
-              as={Link}
-              to="/users"
-              className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}
-            >
-              Users
-            </Nav.Link>
-          </Nav>
-          <div className="d-flex align-items-center gap-3">
-            <Form.Check
-              type="switch"
-              id="theme-toggle"
-              label={
-                <span className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}>
-                  Dark mode
-                </span>
-              }
-              checked={isDark}
-              onChange={() => onToggleTheme()}
-            />
-            {user ? (
-              <div className="d-flex align-items-center gap-2">
-                <Navbar.Text className={`text-${isDark ? 'light' : 'dark'}`}>
-                  Signed in as <span className="fw-semibold">{user.name || user.username}</span>
-                </Navbar.Text>
-                <Button
-                  variant={isDark ? 'outline-light' : 'outline-primary'}
-                  size="sm"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <Button
-                as={Link}
-                to="/login"
-                variant={isDark ? 'outline-light' : 'primary'}
-                size="sm"
-              >
-                Login
-              </Button>
-            )}
-          </div>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+    <header className="topbar">
+      <nav className="topbar__nav" aria-label="Primary">
+        {links.map(({ to, label }) => (
+          <Link
+            key={to}
+            to={to}
+            className={`topbar__link${location.pathname === to ? ' topbar__link--active' : ''}`}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <div className="topbar__actions">
+        <label className="theme-toggle" htmlFor="theme-toggle">
+          <input
+            id="theme-toggle"
+            type="checkbox"
+            checked={isDark}
+            onChange={onToggleTheme}
+          />
+          <span>dark mode</span>
+        </label>
+        {user ? (
+          <>
+            <span className="topbar__user">{user.name || user.username} logged in</span>
+            <button type="button" className="topbar__logout" onClick={handleLogout}>
+              logout
+            </button>
+          </>
+        ) : (
+          <Link to="/login" className="link-button">
+            login
+          </Link>
+        )}
+      </div>
+    </header>
   )
 }
 

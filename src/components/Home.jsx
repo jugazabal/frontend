@@ -4,56 +4,62 @@ import useCounter from '../hooks/useCounter'
 const Page = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  color: ${({ theme }) => theme.primaryText};
-  transition: color 0.25s ease;
+  gap: 2.5rem;
+  color: ${({ theme }) => theme.textPrimary};
 `
 
 const Hero = styled.section`
-  background: ${({ theme }) => theme.heroBackground};
-  padding: 2.5rem;
-  border-radius: 1.5rem;
-  color: ${({ theme }) => theme.heroText};
-  border: 1px solid ${({ theme }) => theme.heroBorder};
-  box-shadow: ${({ theme }) => theme.heroShadow};
-  transition: background 0.35s ease, color 0.25s ease, box-shadow 0.35s ease;
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 16px;
+  padding: clamp(1.75rem, 3vw, 2.5rem);
+  box-shadow: ${({ theme }) => theme.cardShadow};
 `
 
-const CountersSection = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+const HeroTitle = styled.h2`
+  margin: 0 0 1.5rem;
+  font-size: clamp(2.2rem, 3vw, 2.6rem);
+  color: ${({ theme }) => theme.heading};
 `
 
-const CountersGrid = styled.div`
+const HeroParagraph = styled.p`
+  margin: 0;
+  color: ${({ theme }) => theme.muted};
+  line-height: 1.75;
+
+  & + & {
+    margin-top: 1.25rem;
+  }
+`
+
+const CounterSection = styled.section`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 `
 
 const CounterCard = styled.article`
-  background: ${({ theme }) => theme.cardBg};
-  border-radius: 1.25rem;
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 14px;
   padding: 1.75rem;
   box-shadow: ${({ theme }) => theme.cardShadow};
-  border: 1px solid ${({ theme }) => theme.cardBorder};
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 1rem;
-  color: ${({ theme }) => theme.primaryText};
-  transition: background 0.35s ease, box-shadow 0.35s ease, border 0.35s ease;
 `
 
-const CounterTitle = styled.h4`
+const CounterHeading = styled.h3`
   margin: 0;
-  font-size: 1.2rem;
-  color: ${({ theme }) => theme.accent};
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: ${({ theme }) => theme.muted};
 `
 
 const CounterValue = styled.div`
-  font-size: clamp(2.5rem, 4vw, 3rem);
+  font-size: clamp(2.5rem, 5vw, 3.2rem);
   font-weight: 700;
-  color: ${({ theme }) => theme.counterText};
+  color: ${({ theme }) => theme.heading};
 `
 
 const CounterActions = styled.div`
@@ -62,29 +68,34 @@ const CounterActions = styled.div`
   gap: 0.75rem;
 `
 
-const CounterButton = styled.button`
+const ControlButton = styled.button`
   border: none;
   border-radius: 999px;
-  padding: 0.5rem 1.25rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.buttonText};
-  background: ${({ theme, $variant }) => {
-    if ($variant === 'decrease') return theme.danger
-    if ($variant === 'reset') return theme.neutral
-    return theme.success
-  }};
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 0.55rem 1.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  background: var(--color-button-bg);
+  color: var(--color-button-text);
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.hoverShadow};
+    box-shadow: 0 16px 30px rgba(61, 82, 160, 0.22);
   }
 
   &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.accent};
-    outline-offset: 3px;
+    outline: 2px solid var(--color-link);
+    outline-offset: 4px;
   }
+`
+
+const Footnote = styled.p`
+  margin: 0;
+  font-style: italic;
+  color: ${({ theme }) => theme.footerText};
 `
 
 const Home = () => {
@@ -94,36 +105,42 @@ const Home = () => {
   return (
     <Page>
       <Hero>
-        <h2 className="mb-3">Welcome to the Blog App</h2>
-        <p className="mb-0">Browse the latest posts, explore authors, and manage your own content.</p>
+        <HeroTitle>TKTL notes app</HeroTitle>
+        <HeroParagraph>
+          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has
+          been the industry&apos;s standard dummy text ever since the 1500s, when an unknown printer took
+          a galley of type and scrambled it to make a type specimen book. It has survived not only five
+          centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
+        </HeroParagraph>
+        <HeroParagraph>
+          It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum
+          passages, and more recently with desktop publishing software like Aldus PageMaker including
+          versions of Lorem Ipsum.
+        </HeroParagraph>
       </Hero>
 
-      <CountersSection>
-        <div>
-          <h3 className="mb-0">Custom Hook Demo: useCounter</h3>
-          <p className="text-muted mb-0">Each counter is powered by the same hook instance, demonstrating isolated state.</p>
-        </div>
-        <CountersGrid>
-          <CounterCard>
-            <CounterTitle>Left Counter</CounterTitle>
-            <CounterValue>{left.value}</CounterValue>
-            <CounterActions>
-              <CounterButton onClick={left.increase}>Increase</CounterButton>
-              <CounterButton $variant="decrease" onClick={left.decrease}>Decrease</CounterButton>
-              <CounterButton $variant="reset" onClick={left.zero}>Reset</CounterButton>
-            </CounterActions>
-          </CounterCard>
-          <CounterCard>
-            <CounterTitle>Right Counter</CounterTitle>
-            <CounterValue>{right.value}</CounterValue>
-            <CounterActions>
-              <CounterButton onClick={right.increase}>Increase</CounterButton>
-              <CounterButton $variant="decrease" onClick={right.decrease}>Decrease</CounterButton>
-              <CounterButton $variant="reset" onClick={right.zero}>Reset</CounterButton>
-            </CounterActions>
-          </CounterCard>
-        </CountersGrid>
-      </CountersSection>
+      <CounterSection>
+        <CounterCard>
+          <CounterHeading>Left counter</CounterHeading>
+          <CounterValue>{left.value}</CounterValue>
+          <CounterActions>
+            <ControlButton type="button" onClick={left.increase}>Increase</ControlButton>
+            <ControlButton type="button" onClick={left.decrease}>Decrease</ControlButton>
+            <ControlButton type="button" onClick={left.zero}>Reset</ControlButton>
+          </CounterActions>
+        </CounterCard>
+        <CounterCard>
+          <CounterHeading>Right counter</CounterHeading>
+          <CounterValue>{right.value}</CounterValue>
+          <CounterActions>
+            <ControlButton type="button" onClick={right.increase}>Increase</ControlButton>
+            <ControlButton type="button" onClick={right.decrease}>Decrease</ControlButton>
+            <ControlButton type="button" onClick={right.zero}>Reset</ControlButton>
+          </CounterActions>
+        </CounterCard>
+      </CounterSection>
+
+      <Footnote>Note app, Department of Computer Science 2020</Footnote>
     </Page>
   )
 }
