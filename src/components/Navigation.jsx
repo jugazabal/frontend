@@ -1,40 +1,82 @@
 import { Link } from 'react-router-dom'
-import { Navbar, Nav, Container, Button } from 'react-bootstrap'
+import { Navbar, Nav, Container, Button, Form } from 'react-bootstrap'
 
-const Navigation = ({ user, handleLogout }) => {
+const Navigation = ({ user, handleLogout, themeMode, onToggleTheme }) => {
+  const isDark = themeMode === 'dark'
+
   return (
-    <Navbar bg="dark" variant="dark" expand="md" className="rounded shadow-sm">
+    <Navbar
+      bg={isDark ? 'dark' : 'light'}
+      data-bs-theme={themeMode}
+      variant={isDark ? 'dark' : 'light'}
+      expand="md"
+      className="rounded shadow-sm mb-4"
+    >
       <Container fluid>
-        <Navbar.Brand as={Link} to="/">
+        <Navbar.Brand
+          as={Link}
+          to="/"
+          className={isDark ? 'text-light fw-semibold' : 'text-dark fw-semibold'}
+        >
           Blog App
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="app-navigation" />
         <Navbar.Collapse id="app-navigation">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/">
+            <Nav.Link as={Link} to="/" className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}>
               Home
             </Nav.Link>
-            <Nav.Link as={Link} to="/blogs">
+            <Nav.Link
+              as={Link}
+              to="/blogs"
+              className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}
+            >
               Blogs
             </Nav.Link>
-            <Nav.Link as={Link} to="/users">
+            <Nav.Link
+              as={Link}
+              to="/users"
+              className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}
+            >
               Users
             </Nav.Link>
           </Nav>
-          {user ? (
-            <div className="d-flex align-items-center gap-2">
-              <Navbar.Text className="text-light">
-                Signed in as <span className="fw-semibold">{user.name || user.username}</span>
-              </Navbar.Text>
-              <Button variant="outline-light" size="sm" onClick={handleLogout}>
-                Logout
+          <div className="d-flex align-items-center gap-3">
+            <Form.Check
+              type="switch"
+              id="theme-toggle"
+              label={
+                <span className={isDark ? 'text-light fw-semibold' : 'fw-semibold'}>
+                  Dark mode
+                </span>
+              }
+              checked={isDark}
+              onChange={() => onToggleTheme()}
+            />
+            {user ? (
+              <div className="d-flex align-items-center gap-2">
+                <Navbar.Text className={`text-${isDark ? 'light' : 'dark'}`}>
+                  Signed in as <span className="fw-semibold">{user.name || user.username}</span>
+                </Navbar.Text>
+                <Button
+                  variant={isDark ? 'outline-light' : 'outline-primary'}
+                  size="sm"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Button
+                as={Link}
+                to="/login"
+                variant={isDark ? 'outline-light' : 'primary'}
+                size="sm"
+              >
+                Login
               </Button>
-            </div>
-          ) : (
-            <Button as={Link} to="/login" variant="outline-light" size="sm">
-              Login
-            </Button>
-          )}
+            )}
+          </div>
         </Navbar.Collapse>
       </Container>
     </Navbar>

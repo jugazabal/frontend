@@ -5,14 +5,18 @@ const Page = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  color: ${({ theme }) => theme.primaryText};
+  transition: color 0.25s ease;
 `
 
 const Hero = styled.section`
-  background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);
+  background: ${({ theme }) => theme.heroBackground};
   padding: 2.5rem;
   border-radius: 1.5rem;
-  color: #fff;
-  box-shadow: 0 20px 35px rgba(13, 110, 253, 0.25);
+  color: ${({ theme }) => theme.heroText};
+  border: 1px solid ${({ theme }) => theme.heroBorder};
+  box-shadow: ${({ theme }) => theme.heroShadow};
+  transition: background 0.35s ease, color 0.25s ease, box-shadow 0.35s ease;
 `
 
 const CountersSection = styled.section`
@@ -28,26 +32,28 @@ const CountersGrid = styled.div`
 `
 
 const CounterCard = styled.article`
-  background: #ffffff;
+  background: ${({ theme }) => theme.cardBg};
   border-radius: 1.25rem;
   padding: 1.75rem;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(13, 110, 253, 0.15);
+  box-shadow: ${({ theme }) => theme.cardShadow};
+  border: 1px solid ${({ theme }) => theme.cardBorder};
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  color: ${({ theme }) => theme.primaryText};
+  transition: background 0.35s ease, box-shadow 0.35s ease, border 0.35s ease;
 `
 
 const CounterTitle = styled.h4`
   margin: 0;
   font-size: 1.2rem;
-  color: #0d6efd;
+  color: ${({ theme }) => theme.accent};
 `
 
 const CounterValue = styled.div`
   font-size: clamp(2.5rem, 4vw, 3rem);
   font-weight: 700;
-  color: #111827;
+  color: ${({ theme }) => theme.counterText};
 `
 
 const CounterActions = styled.div`
@@ -61,22 +67,22 @@ const CounterButton = styled.button`
   border-radius: 999px;
   padding: 0.5rem 1.25rem;
   font-weight: 600;
-  color: #ffffff;
-  background: ${({ $variant }) => {
-    if ($variant === 'decrease') return '#d63384'
-    if ($variant === 'reset') return '#6c757d'
-    return '#198754'
+  color: ${({ theme }) => theme.buttonText};
+  background: ${({ theme, $variant }) => {
+    if ($variant === 'decrease') return theme.danger
+    if ($variant === 'reset') return theme.neutral
+    return theme.success
   }};
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   cursor: pointer;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(17, 24, 39, 0.15);
+    box-shadow: ${({ theme }) => theme.hoverShadow};
   }
 
   &:focus-visible {
-    outline: 2px solid #0d6efd;
+    outline: 2px solid ${({ theme }) => theme.accent};
     outline-offset: 3px;
   }
 `

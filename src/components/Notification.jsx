@@ -1,6 +1,9 @@
 import Alert from 'react-bootstrap/Alert'
 
 const resolveVariant = (message) => {
+  if (typeof message !== 'string') {
+    return 'info'
+  }
   const normalized = message.toLowerCase()
   if (normalized.includes('error') || normalized.includes('fail')) {
     return 'danger'
