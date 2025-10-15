@@ -1,5 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Paper from '@mui/material/Paper'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import Typography from '@mui/material/Typography'
+import Stack from '@mui/material/Stack'
+import Alert from '@mui/material/Alert'
 import loginService from '../services/login'
 import blogsService from '../services/blogs'
 
@@ -26,29 +32,40 @@ const Login = ({ setUser, notify }) => {
   }
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
+    <Paper elevation={3} sx={{ p: 3, maxWidth: 420 }}>
+      <Stack spacing={3}>
         <div>
-          username{' '}
-          <input
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
-            autoComplete="username"
-          />
+          <Typography variant="h4" component="h2" gutterBottom>
+            Login
+          </Typography>
+          <Alert severity="info">Use your blog credentials to sign in.</Alert>
         </div>
-        <div>
-          password{' '}
-          <input
-            type="password"
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-            autoComplete="current-password"
-          />
-        </div>
-        <button type="submit">login</button>
-      </form>
-    </div>
+        <form onSubmit={handleLogin}>
+          <Stack spacing={2}>
+            <TextField
+              label="Username"
+              value={username}
+              onChange={({ target }) => setUsername(target.value)}
+              autoComplete="username"
+              fullWidth
+              required
+            />
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={({ target }) => setPassword(target.value)}
+              autoComplete="current-password"
+              fullWidth
+              required
+            />
+            <Button type="submit" variant="contained" size="large">
+              Login
+            </Button>
+          </Stack>
+        </form>
+      </Stack>
+    </Paper>
   )
 }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
+import { Table, Form, Button, Spinner, Badge } from 'react-bootstrap'
 import Blog from './Blog'
 import blogsService from '../services/blogs'
 import { setBlogs, appendBlog, updateBlog, removeBlog } from '../reducers/blogReducer'
@@ -135,60 +136,111 @@ const Blogs = ({ user, notify, handleAuthError }) => {
 
   return (
     <div>
-      <h2>Blogs</h2>
-      <fieldset style={{ marginTop: '1rem' }}>
-        <legend>Filter blogs</legend>
-        <label style={{ marginRight: '1rem' }}>
-          <input
+      <h2 className="mb-3">Blogs</h2>
+      <Form className="border rounded p-3 bg-body-tertiary">
+        <Form.Label className="fw-semibold">Filter blogs</Form.Label>
+        <div className="d-flex flex-wrap gap-3">
+          <Form.Check
+            inline
             type="radio"
+            id="blog-filter-all"
+            label="All"
             name="blog-filter"
             value="all"
             checked={filter === 'all'}
             onChange={() => setFilter('all')}
           />
-          <span style={{ marginLeft: '0.3rem' }}>All</span>
-        </label>
-        <label style={{ marginRight: '1rem' }}>
-          <input
+          <Form.Check
+            inline
             type="radio"
+            id="blog-filter-important"
+            label="Important only"
             name="blog-filter"
             value="important"
             checked={filter === 'important'}
             onChange={() => setFilter('important')}
           />
-          <span style={{ marginLeft: '0.3rem' }}>Important only</span>
-        </label>
-        <label>
-          <input
+          <Form.Check
+            inline
             type="radio"
+            id="blog-filter-mine"
+            label={user ? 'Created by me' : 'Created by me (login required)'}
             name="blog-filter"
             value="mine"
             checked={filter === 'mine'}
             onChange={() => setFilter('mine')}
             disabled={!user}
           />
-          <span style={{ marginLeft: '0.3rem' }}>{user ? 'Created by me' : 'Created by me (login required)'}</span>
-        </label>
-      </fieldset>
-      {blogsLoading && <p>Loading blogs...</p>}
-      <ul>
-        {blogsToShow.map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            onToggle={() => toggleImportanceOf(blog.id)}
-            onDelete={() => deleteBlog(blog.id)}
-            canModify={isOwner(blog)}
-          />
-        ))}
-      </ul>
-      {user ? (
-        <form onSubmit={addBlog}>
-          <input value={newBlog} onChange={handleBlogChange} />
-          <button type="submit">save</button>
-        </form>
+        </div>
+      </Form>
+
+      {blogsLoading ? (
+        <div className="d-flex align-items-center gap-2 mt-4">
+          <Spinner animation="border" role="status" size="sm" />
+          <span>Loading blogs...</span>
+        </div>
       ) : (
-        <p>Log in to add new blogs.</p>
+        <Table striped bordered hover responsive className="mt-4">
+          <thead>
+            <tr>
+              <th>Content</th>
+              <th>Owner</th>
+              <th>Status</th>
+              <th className="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {blogsToShow.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center text-muted">
+                  No blogs match the selected filter.
+                </td>
+              </tr>
+            ) : (
+              blogsToShow.map((blog) => (
+                <Blog
+                  key={blog.id}
+                  blog={blog}
+                  onToggle={() => toggleImportanceOf(blog.id)}
+                  onDelete={() => deleteBlog(blog.id)}
+                  canModify={isOwner(blog)}
+                />
+              ))
+            )}
+          </tbody>
+        </Table>
+      )}
+
+      {user ? (
+        <Form onSubmit={addBlog} className="mt-4">
+          <Form.Group controlId="newBlogContent" className="mb-3">
+            <Form.Label>New blog content</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              placeholder="Share your thoughts..."
+              value={newBlog}
+              onChange={handleBlogChange}
+            />
+          </Form.Group>
+          <div className="d-flex gap-2">
+            <Button type="submit" variant="primary">
+              Save blog
+            </Button>
+            <Button
+              type="button"
+              variant="outline-secondary"
+              onClick={() => setNewBlog('')}
+              disabled={!newBlog.trim()}
+            >
+              Clear
+            </Button>
+          </div>
+        </Form>
+      ) : (
+        <Badge bg="secondary" className="mt-4">
+          Log in to add new blogs.
+        </Badge>
       )}
     </div>
   )

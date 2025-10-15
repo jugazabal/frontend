@@ -1,40 +1,33 @@
 
+import { Button, Badge } from 'react-bootstrap'
+
 const Blog = ({ blog, onToggle, onDelete, canModify }) => {
   const owner = blog.user?.name || blog.user?.username
+
   return (
-    <li>
-      <span>{blog.content}</span>
-      {owner && <span style={{ marginLeft: '0.5em', fontStyle: 'italic', color: '#555' }}>— {owner}</span>}
-      <button
-        onClick={onToggle}
-        disabled={!canModify}
-        style={{
-          color: blog.important ? 'red' : 'blue',
-          borderColor: blog.important ? 'red' : 'blue',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          background: 'white',
-          marginLeft: '0.5em',
-          marginRight: '0.5em',
-          cursor: canModify ? 'pointer' : 'not-allowed',
-          opacity: canModify ? 1 : 0.5
-        }}
-      >
-        make {blog.important ? 'not important' : 'important'}
-      </button>
-      <button
-        onClick={onDelete}
-        disabled={!canModify}
-        style={{
-          marginLeft: '0.5em',
-          color: 'red',
-          cursor: canModify ? 'pointer' : 'not-allowed',
-          opacity: canModify ? 1 : 0.5
-        }}
-      >
-        delete
-      </button>
-    </li>
+    <tr>
+      <td>{blog.content}</td>
+      <td>{owner || '—'}</td>
+      <td>
+        <Badge bg={blog.important ? 'warning' : 'secondary'} text={blog.important ? 'dark' : undefined}>
+          {blog.important ? 'Important' : 'Regular'}
+        </Badge>
+      </td>
+      <td className="text-end">
+        <Button
+          variant={blog.important ? 'outline-danger' : 'outline-primary'}
+          size="sm"
+          onClick={onToggle}
+          disabled={!canModify}
+          className="me-2"
+        >
+          {blog.important ? 'Mark regular' : 'Mark important'}
+        </Button>
+        <Button variant="outline-danger" size="sm" onClick={onDelete} disabled={!canModify}>
+          Delete
+        </Button>
+      </td>
+    </tr>
   )
 }
 

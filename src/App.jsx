@@ -2,6 +2,8 @@
 import { useEffect, useRef } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
+import Container from '@mui/material/Container'
+import Box from '@mui/material/Box'
 import blogsService from './services/blogs'
 import Navigation from './components/Navigation'
 import Home from './components/Home'
@@ -12,7 +14,7 @@ import BlogDetail from './components/BlogDetail'
 import Login from './components/Login'
 import Notification from './components/Notification'
 import { setUser, clearUser } from './reducers/userReducer'
-import { setNotification, clearNotification } from './reducers/notificationReducer'
+import { setNotification } from './reducers/notificationReducer'
 
 const LOCAL_STORAGE_KEY = 'loggedBlogAppUser'
 
@@ -30,7 +32,7 @@ const App = () => {
     dispatch(setNotification(message))
     if (message) {
       notificationTimeout.current = setTimeout(() => {
-        dispatch(clearNotification())
+        dispatch(setNotification(null))
         notificationTimeout.current = null
       }, duration)
     }
@@ -84,17 +86,21 @@ const App = () => {
   }
 
   return (
-    <div className="app-container">
-      <Navigation user={user} handleLogout={handleLogout} />
-      <Notification message={notification} />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/blogs" element={<Blogs user={user} notify={notify} handleAuthError={handleAuthError} />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/users/:id" element={<User />} />
-        <Route path="/blogs/:id" element={<BlogDetail />} />
-        <Route path="/login" element={<Login setUser={(user) => dispatch(setUser(user))} notify={notify} />} />
-      </Routes>
+    <div className="container py-4">
+      <Container maxWidth="lg">
+        <Navigation user={user} handleLogout={handleLogout} />
+        <Notification message={notification} />
+        <Box component="main" sx={{ mt: 3 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/blogs" element={<Blogs user={user} notify={notify} handleAuthError={handleAuthError} />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/users/:id" element={<User />} />
+            <Route path="/blogs/:id" element={<BlogDetail />} />
+            <Route path="/login" element={<Login setUser={(user) => dispatch(setUser(user))} notify={notify} />} />
+          </Routes>
+        </Box>
+      </Container>
     </div>
   )
 }
