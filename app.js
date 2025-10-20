@@ -36,6 +36,11 @@ app.get('/', (_req, res) => {
 // Serve static assets under the base path used by Vite
 app.use('/frontend', express.static(distPath))
 
+// Support legacy direct visits to SPA routes without the /frontend prefix
+app.get(/^\/blogs(\/.*)?$/, async (_req, res, next) => {
+  return sendIndex(res, true).catch(next)
+})
+
 // SPA fallback for any frontend route when static assets miss
 app.get(/^\/frontend(\/.*)?$/, async (_req, res, next) => {
   return sendIndex(res, true).catch(next)
@@ -57,6 +62,7 @@ app.get('/health', async (_req, res) => {
 app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
+app.use('/api/blogs', notesRouter)
 
 // Any other non-API route falls back to SPA entry (with simple message if build missing)
 app.get(/^(?!\/api).*/, async (_req, res, next) => {

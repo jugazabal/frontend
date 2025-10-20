@@ -43,9 +43,9 @@ The page is showing a `404 (Not Found)` error in the DevTools Console, indicatin
 ## 🛠 Checklist to Fix the Issue on http://127.0.0.1:5173/blogs
 
 ### 🧭 Server-Side Routing
-- [ ] Verify that the backend server has a route defined for `/blogs`.
-- [ ] If using an API, ensure the endpoint is correctly defined (e.g., `/api/blogs`).
-- [ ] Confirm that the server is running and accessible at the expected port.
+- [x] Verify that the backend server has a route defined for `/blogs`.
+- [x] If using an API, ensure the endpoint is correctly defined (e.g., `/api/blogs`).
+- [x] Confirm that the server is running and accessible at the expected port.
 
 ### 🌐 Frontend Configuration
 - [ ] Check if the frontend is using client-side routing (e.g., React Router).
