@@ -48,9 +48,9 @@ The page is showing a `404 (Not Found)` error in the DevTools Console, indicatin
 - [x] Confirm that the server is running and accessible at the expected port.
 
 ### 🌐 Frontend Configuration
-- [ ] Check if the frontend is using client-side routing (e.g., React Router).
-- [ ] Ensure the server is configured to serve `index.html` for unknown routes.
-- [ ] For Vite, add fallback routing in `vite.config.js`:
+- [x] Check if the frontend is using client-side routing (e.g., React Router).
+- [x] Ensure the server is configured to serve `index.html` for unknown routes.
+- [x] For Vite, add fallback routing in `vite.config.js`:
   ```js
   export default defineConfig({
     server: {
