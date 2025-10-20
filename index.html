@@ -9,7 +9,55 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
+      id="bootstrap-css"
+      onerror="window.__loadBootstrapFallback__()"
+      onload="document.documentElement.classList.add('bootstrap-loaded')"
     />
+    <script>
+      ;(function () {
+        const FALLBACK_PATH = '/styles/bootstrap-fallback.css'
+
+        function injectFallbackStylesheet () {
+          if (document.getElementById('bootstrap-fallback')) {
+            return
+          }
+          const link = document.createElement('link')
+          link.rel = 'stylesheet'
+          link.href = FALLBACK_PATH
+          link.id = 'bootstrap-fallback'
+          document.head.appendChild(link)
+          console.warn('Bootstrap CDN failed. Loaded local fallback styles instead.')
+        }
+
+        window.__loadBootstrapFallback__ = injectFallbackStylesheet
+
+        function verifyBootstrapLoaded () {
+          const bootstrapLink = document.getElementById('bootstrap-css')
+          if (!bootstrapLink) {
+            injectFallbackStylesheet()
+            return
+          }
+
+          try {
+            const sheet = bootstrapLink.sheet
+            if (!sheet || sheet.cssRules.length === 0) {
+              injectFallbackStylesheet()
+            }
+          } catch (error) {
+            if (error && error.name === 'SecurityError') {
+              return
+            }
+            injectFallbackStylesheet()
+          }
+        }
+
+        if (document.readyState === 'complete') {
+          verifyBootstrapLoaded()
+        } else {
+          window.addEventListener('load', verifyBootstrapLoaded)
+        }
+      })()
+    </script>
     <title>Vite + React</title>
   </head>
   <body>

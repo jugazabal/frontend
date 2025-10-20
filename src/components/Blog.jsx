@@ -6,14 +6,14 @@ const Blog = ({ blog, onToggle, onDelete, canModify }) => {
 
   return (
     <tr>
-      <td>{blog.content}</td>
-      <td>{owner || '—'}</td>
-      <td>
+      <td data-label="Content">{blog.content}</td>
+      <td data-label="Owner">{owner || '—'}</td>
+      <td data-label="Status">
         <Badge bg={blog.important ? 'warning' : 'secondary'} text={blog.important ? 'dark' : undefined}>
           {blog.important ? 'Important' : 'Regular'}
         </Badge>
       </td>
-      <td className="text-end">
+      <td className="text-end" data-label="Actions">
         <Button
           variant={blog.important ? 'outline-danger' : 'outline-primary'}
           size="sm"

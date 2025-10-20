@@ -29,9 +29,9 @@ Here’s a checklist based on the issues found on the `http://localhost:3001/blo
 - [x] Use semantic HTML for better screen reader support.
 
 ## 📱 Responsiveness & Styling
-- [ ] Confirm Bootstrap CSS loads correctly.
-- [ ] Test layout across different screen sizes.
-- [ ] Ensure fallback styles are in place if CDN fails.
+- [x] Confirm Bootstrap CSS loads correctly.
+- [x] Test layout across different screen sizes.
+- [x] Ensure fallback styles are in place if CDN fails.
 
 ---
 

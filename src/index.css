@@ -276,3 +276,116 @@ th {
 tr:last-child td {
   border-bottom: none;
 }
+
+@media (max-width: 900px) {
+  .app-shell {
+    width: min(720px, 94%);
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .topbar__nav {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .topbar__actions {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .main-content {
+    padding: 2rem 0 3rem;
+  }
+
+  table {
+    font-size: 0.95rem;
+  }
+
+  th,
+  td {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    width: 94%;
+  }
+
+  .topbar__nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .topbar__actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .surface-card,
+  .auth-card {
+    padding: 1.5rem;
+  }
+
+  .main-content {
+    padding: 1.5rem 0 2.5rem;
+  }
+
+  table,
+  th,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  td {
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.65rem 0.85rem;
+  }
+
+  td.text-end {
+    text-align: left !important;
+  }
+
+  td .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  td .btn:last-child {
+    margin-bottom: 0;
+  }
+
+  td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  td:last-child {
+    border-bottom: none;
+  }
+}
