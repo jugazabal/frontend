@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Table, Form, Button, Spinner, Badge } from 'react-bootstrap'
 import Blog from './Blog'
@@ -10,6 +10,8 @@ const Blogs = ({ user, notify, handleAuthError }) => {
   const blogs = useSelector(state => state.blogs)
   const [newBlog, setNewBlog] = useState('')
   const [filter, setFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortOrder, setSortOrder] = useState('newest')
   const [blogsLoading, setBlogsLoading] = useState(false)
 
   const errorMessage = (err, fallback) => {
@@ -37,6 +39,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
     try {
       const created = await blogsService.create(blogObject)
       dispatch(appendBlog(created))
+      notify?.('Blog saved', 3000)
     } catch (err) {
       if (!handleAuthError?.(err)) {
         notify?.(errorMessage(err, 'Failed to create note'))
@@ -58,18 +61,19 @@ const Blogs = ({ user, notify, handleAuthError }) => {
     try {
       await blogsService.delete(id)
       dispatch(removeBlog(id))
+      notify?.('Blog deleted', 3000)
     } catch (err) {
       if (handleAuthError?.(err)) return
       notify?.(errorMessage(err, 'Failed to delete note'))
     }
   }
 
-  const isOwner = (blog) => {
+  const isOwner = useCallback((blog) => {
     const ownerId = typeof blog.user === 'object' && blog.user !== null
       ? blog.user.id
       : blog.user
     return Boolean(user && ownerId && user.id === ownerId)
-  }
+  }, [user])
 
   const deleteBlog = id => {
     const blog = blogs.find(b => b.id === id)
@@ -116,6 +120,11 @@ const Blogs = ({ user, notify, handleAuthError }) => {
       notify('Blog content exceeds 500 characters limit', 4000)
       return
     }
+    const duplicate = blogs.some(blog => blog.content?.trim().toLowerCase() === trimmed.toLowerCase())
+    if (duplicate) {
+      notify?.('A blog with this content already exists', 4000)
+      return
+    }
     const blogObject = {
       content: trimmed,
       important: Math.random() > 0.5
@@ -128,19 +137,56 @@ const Blogs = ({ user, notify, handleAuthError }) => {
     setNewBlog(event.target.value)
   }
 
-  const blogsToShow = blogs.filter((blog) => {
-    if (filter === 'important') {
-      return blog.important
+  const filteredBlogs = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    return blogs.filter((blog) => {
+      if (filter === 'important' && !blog.important) {
+        return false
+      }
+      if (filter === 'mine' && !isOwner(blog)) {
+        return false
+      }
+      if (normalizedSearch) {
+        const contentMatch = blog.content?.toLowerCase().includes(normalizedSearch)
+        const ownerName = (blog.user?.name || blog.user?.username || '').toLowerCase()
+        const ownerMatch = ownerName.includes(normalizedSearch)
+        if (!contentMatch && !ownerMatch) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [blogs, filter, searchTerm, isOwner])
+
+  const blogsToShow = useMemo(() => {
+    const getTimestamp = (blog) => {
+      if (!blog.createdAt) return 0
+      const parsed = Date.parse(blog.createdAt)
+      return Number.isNaN(parsed) ? 0 : parsed
     }
-    if (filter === 'mine') {
-      return isOwner(blog)
+    const copy = [...filteredBlogs]
+    switch (sortOrder) {
+      case 'oldest':
+        return copy.sort((a, b) => getTimestamp(a) - getTimestamp(b))
+      case 'importance':
+        return copy.sort((a, b) => {
+          if (a.important === b.important) {
+            return getTimestamp(b) - getTimestamp(a)
+          }
+          return a.important ? -1 : 1
+        })
+      case 'newest':
+      default:
+        return copy.sort((a, b) => getTimestamp(b) - getTimestamp(a))
     }
-    return true
-  })
+  }, [filteredBlogs, sortOrder])
 
   return (
     <div>
       <h2 className="mb-3">Blogs</h2>
+      <p className="text-muted">
+        Status column shows if a blog is marked <strong>Important</strong> or <strong>Regular</strong>.
+      </p>
       <Form className="border rounded p-3 bg-body-tertiary">
         <Form.Label className="fw-semibold">Filter blogs</Form.Label>
         <div className="d-flex flex-wrap gap-3">
@@ -175,6 +221,25 @@ const Blogs = ({ user, notify, handleAuthError }) => {
             onChange={() => setFilter('mine')}
             disabled={!user}
           />
+        </div>
+        <div className="d-flex flex-column flex-md-row gap-3 mt-3">
+          <Form.Group controlId="blog-search" className="flex-grow-1">
+            <Form.Label className="mb-1">Search</Form.Label>
+            <Form.Control
+              type="search"
+              placeholder="Search by content or owner"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="blog-sort">
+            <Form.Label className="mb-1">Sort</Form.Label>
+            <Form.Select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="importance">Important first</option>
+            </Form.Select>
+          </Form.Group>
         </div>
       </Form>
 
@@ -234,7 +299,10 @@ const Blogs = ({ user, notify, handleAuthError }) => {
             <Button
               type="button"
               variant="outline-secondary"
-              onClick={() => setNewBlog('')}
+              onClick={() => {
+                setNewBlog('')
+                notify?.('Draft cleared', 2000)
+              }}
               disabled={!newBlog.trim()}
             >
               Clear
