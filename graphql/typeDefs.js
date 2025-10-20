@@ -1,4 +1,9 @@
 export const typeDefs = `#graphql
+  enum YesNo {
+    YES
+    NO
+  }
+
   type Note {
     id: ID!
     content: String!
@@ -23,7 +28,7 @@ export const typeDefs = `#graphql
 
   type Query {
     noteCount: Int!
-    allNotes(important: Boolean): [Note!]!
+    allNotes(importance: YesNo): [Note!]!
     findNote(id: ID!): Note
     allUsers: [User!]!
     me: User

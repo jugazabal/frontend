@@ -106,6 +106,50 @@ MONGODB_URI=... node import-notes.js --force
 	- 400 content missing
 	- 404 note not found
 
+### GraphQL endpoint & Apollo Explorer
+
+- The GraphQL API is available at `/graphql`. During local development run `npm run dev:full` and open [http://localhost:3001/graphql](http://localhost:3001/graphql) to access Apollo Studio Explorer.
+- Example query for listing notes:
+
+```
+query {
+	allNotes {
+		id
+		content
+		important
+	}
+}
+```
+
+- Example filtered query using the enum-style filter introduced in Part 8 tutorials:
+
+```
+query {
+	importantNotes: allNotes(importance: YES) {
+		id
+		content
+	}
+	nonImportantNotes: allNotes(importance: NO) {
+		id
+		content
+	}
+}
+```
+
+- Example mutation for adding a note:
+
+```
+mutation {
+	addNote(content: "GraphQL example", important: true) {
+		id
+		content
+		important
+	}
+}
+```
+
+- To authenticate, first run the `login` mutation to obtain a JWT token and then set the `Authorization` header in the Explorer (e.g. `Bearer <token>`). Authenticated mutations such as `addNote` require this header.
+
 ### Model
 
 See `models/note.js` for schema & JSON transform.

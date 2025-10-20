@@ -12,8 +12,10 @@ export const resolvers = {
     noteCount: async () => Note.countDocuments(),
     allNotes: async (_root, args) => {
       const filter = {}
-      if (typeof args.important === 'boolean') {
-        filter.important = args.important
+      if (args.importance === 'YES') {
+        filter.important = true
+      } else if (args.importance === 'NO') {
+        filter.important = false
       }
       const notes = await Note.find(filter).sort({ createdAt: -1 }).populate('user', { username: 1, name: 1 })
       return notes

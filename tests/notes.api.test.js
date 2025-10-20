@@ -22,6 +22,8 @@ beforeAll(async () => {
   app = mod.default
   initDatabase = mod.initDatabase
   await initDatabase()
+  await User.deleteMany({})
+  await Note.deleteMany({})
   const userRes = await request(app)
     .post('/api/users')
     .send({ username: 'tester', name: 'Test User', password: 'password123' })
