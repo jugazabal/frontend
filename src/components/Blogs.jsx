@@ -86,7 +86,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
       notify('You can only delete your own blogs.')
       return
     }
-    if (window.confirm('Delete this blog?')) {
+    if (window.confirm(`Delete blog "${blog.content.slice(0, 30)}"?`)) {
       deleteBlogFromServer(blog.id)
     }
   }
@@ -103,6 +103,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
       return
     }
     updateBlogAction(blog.id, { important: !blog.important })
+    notify?.(blog.important ? 'Blog marked regular' : 'Blog marked important', 3000)
   }
 
   const addBlog = (event) => {

@@ -20,8 +20,8 @@ Here’s a checklist based on the issues found on the `http://localhost:3001/blo
 - [x] Consider adding sorting options (e.g., newest, most liked).
 
 ## ⚠️ User Actions
-- [ ] Add confirmation dialogs for destructive actions (e.g., delete).
-- [ ] Provide feedback for actions like “Save” or “Clear” (e.g., toast notifications).
+- [x] Add confirmation dialogs for destructive actions (e.g., delete).
+- [x] Provide feedback for actions like “Save” or “Clear” (e.g., toast notifications).
 
 ## ♿ Accessibility
 - [ ] Add ARIA labels for interactive elements.
