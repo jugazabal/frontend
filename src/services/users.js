@@ -1,9 +1,25 @@
-import axios from 'axios'
-const apiBase = import.meta.env.VITE_API_BASE || ''
-const baseUrl = `${apiBase}/api/users`
+import { graphqlRequest } from './graphqlClient'
 
-const getAll = () => {
-  return axios.get(baseUrl).then(response => response.data)
+const userSelection = `
+  id
+  username
+  name
+  notes {
+    id
+    content
+    important
+  }
+`
+
+const getAll = async () => {
+  const data = await graphqlRequest(`
+    query AllUsers {
+      allUsers {
+        ${userSelection}
+      }
+    }
+  `)
+  return data.allUsers
 }
 
 export default { getAll }

@@ -13,6 +13,8 @@ const BlogDetail = () => {
   const blog = blogs?.find(b => b.id === id)
   if (!blog) return <p>Blog not found</p>
 
+  const errorMessage = (err, fallback) => err?.graphQLErrors?.[0]?.message || err?.message || fallback
+
   const addComment = async (event) => {
     event.preventDefault()
     if (!newComment.trim()) return
@@ -22,6 +24,7 @@ const BlogDetail = () => {
       setNewComment('')
     } catch (err) {
       console.error('Failed to add comment', err)
+      alert(errorMessage(err, 'Failed to add comment'))
     }
   }
 

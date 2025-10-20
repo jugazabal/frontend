@@ -1,11 +1,27 @@
-import axios from 'axios'
+import { graphqlRequest } from './graphqlClient'
 
-const apiBase = import.meta.env.VITE_API_BASE || ''
-const baseUrl = `${apiBase}/api/login`
+const login = async ({ username, password }) => {
+  const data = await graphqlRequest(`
+    mutation Login($username: String!, $password: String!) {
+      login(username: $username, password: $password) {
+        token
+        user {
+          id
+          username
+          name
+        }
+      }
+    }
+  `, { username, password })
 
-const login = async credentials => {
-  const response = await axios.post(baseUrl, credentials)
-  return response.data
+  const { token, user } = data.login
+
+  return {
+    token,
+    username: user.username,
+    name: user.name,
+    id: user.id
+  }
 }
 
 export default { login }

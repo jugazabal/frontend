@@ -50,7 +50,7 @@ const Users = () => {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell align="right">Blogs created</TableCell>
+              <TableCell align="right">Notes created</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -61,7 +61,7 @@ const Users = () => {
                     {user.name || user.username}
                   </Button>
                 </TableCell>
-                <TableCell align="right">{user.blogs?.length || 0}</TableCell>
+                <TableCell align="right">{user.notes?.length || 0}</TableCell>
               </TableRow>
             ))}
           </TableBody>

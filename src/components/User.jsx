@@ -42,18 +42,18 @@ const User = () => {
     <Paper elevation={2} sx={{ p: 3 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h4">{user.name || user.username}</Typography>
-        <Chip label={`${user.blogs?.length || 0} blogs`} color="primary" />
+        <Chip label={`${user.notes?.length || 0} notes`} color="primary" />
       </Stack>
       <Typography variant="h6" gutterBottom>
-        Blogs
+        Notes
       </Typography>
       <List>
-        {user.blogs?.length ? (
-          user.blogs.map((blog) => (
-            <ListItem key={blog.id} divider>
+        {user.notes?.length ? (
+          user.notes.map((note) => (
+            <ListItem key={note.id} divider>
               <ListItemText
-                primary={blog.title || blog.content}
-                secondary={blog.important ? 'Marked important' : undefined}
+                primary={note.content}
+                secondary={note.important ? 'Marked important' : undefined}
               />
             </ListItem>
           ))

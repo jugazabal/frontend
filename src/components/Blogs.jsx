@@ -12,6 +12,10 @@ const Blogs = ({ user, notify, handleAuthError }) => {
   const [filter, setFilter] = useState('all')
   const [blogsLoading, setBlogsLoading] = useState(false)
 
+  const errorMessage = (err, fallback) => {
+    return err?.graphQLErrors?.[0]?.message || err?.message || err?.response?.data?.error || fallback
+  }
+
   useEffect(() => {
     const fetchBlogs = async () => {
       setBlogsLoading(true)
@@ -20,7 +24,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
         dispatch(setBlogs(blogs))
       } catch (err) {
         if (!handleAuthError?.(err)) {
-          notify?.('Failed to load blogs')
+          notify?.(errorMessage(err, 'Failed to load notes'))
         }
       } finally {
         setBlogsLoading(false)
@@ -35,7 +39,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
       dispatch(appendBlog(created))
     } catch (err) {
       if (!handleAuthError?.(err)) {
-        notify?.(err?.response?.data?.error || 'Failed to create blog')
+        notify?.(errorMessage(err, 'Failed to create note'))
       }
     }
   }
@@ -46,7 +50,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
       dispatch(updateBlog(updated))
     } catch (err) {
       if (handleAuthError?.(err)) return
-      notify?.(err?.response?.data?.error || 'Failed to update blog')
+      notify?.(errorMessage(err, 'Failed to update note'))
     }
   }
 
@@ -56,7 +60,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
       dispatch(removeBlog(id))
     } catch (err) {
       if (handleAuthError?.(err)) return
-      notify?.(err?.response?.data?.error || 'Failed to delete blog')
+      notify?.(errorMessage(err, 'Failed to delete note'))
     }
   }
 

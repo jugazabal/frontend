@@ -3,6 +3,16 @@ import mongoose from 'mongoose'
 const noteSchema = new mongoose.Schema({
   content: { type: String, required: true, minlength: 1, trim: true },
   important: { type: Boolean, default: false },
+  comments: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: function (comments) {
+        return Array.isArray(comments) && comments.every(comment => typeof comment === 'string')
+      },
+      message: 'comments must be an array of strings'
+    }
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

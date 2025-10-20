@@ -1,46 +1,81 @@
-import axios from 'axios'
-// Use relative URL so Vite proxy (in dev) or same-origin (in prod) handles routing.
-// Allow override via environment variable VITE_API_BASE if needed.
-const apiBase = import.meta.env.VITE_API_BASE || ''
-const baseUrl = `${apiBase}/api/blogs`
+import graphqlClient, { graphqlRequest } from './graphqlClient'
 
-let token = null
+const noteSelection = `
+  id
+  content
+  important
+  createdAt
+  updatedAt
+  comments
+  user {
+    id
+    username
+    name
+  }
+`
 
-const setToken = newToken => {
-  token = newToken ? `Bearer ${newToken}` : null
+const setToken = (newToken) => {
+  graphqlClient.setAuthToken(newToken)
 }
 
-const authConfig = () => (token ? { headers: { Authorization: token } } : {})
-
-const deleteBlog = id => {
-  return axios.delete(`${baseUrl}/${id}`, authConfig())
-}
-
-
-const getAll = () => {
-  return axios.get(baseUrl)
-    .then(response => {
-      const data = response.data
-      if (!Array.isArray(data)) {
-        throw new Error('Unexpected response format (expected an array of blogs)')
+const getAll = async () => {
+  const data = await graphqlRequest(`
+    query AllNotes {
+      allNotes {
+        ${noteSelection}
       }
-      return data
-    })
+    }
+  `)
+  return data.allNotes
 }
 
-const create = newObject => {
-  return axios.post(baseUrl, newObject, authConfig()).then(response => response.data)
+const create = async ({ content, important }) => {
+  const data = await graphqlRequest(`
+    mutation AddNote($content: String!, $important: Boolean) {
+      addNote(content: $content, important: $important) {
+        ${noteSelection}
+      }
+    }
+  `, { content, important })
+  return data.addNote
 }
 
-const update = (id, newObject) => {
-  return axios.put(`${baseUrl}/${id}`, newObject, authConfig()).then(response => response.data)
+const update = async (id, updates) => {
+  void updates
+  const data = await graphqlRequest(`
+    mutation ToggleImportance($id: ID!) {
+      toggleImportance(id: $id) {
+        ${noteSelection}
+      }
+    }
+  `, { id })
+  return data.toggleImportance
 }
 
-const createComment = (id, comment) => {
-  return axios.post(`${baseUrl}/${id}/comments`, { comment }, authConfig()).then(response => response.data)
+const deleteBlog = async (id) => {
+  const data = await graphqlRequest(`
+    mutation DeleteNote($id: ID!) {
+      deleteNote(id: $id)
+    }
+  `, { id })
+  if (!data.deleteNote) {
+    throw new Error('Failed to delete note')
+  }
+  return true
 }
 
-export default { 
+const createComment = async (id, comment) => {
+  const data = await graphqlRequest(`
+    mutation AddComment($id: ID!, $comment: String!) {
+      addComment(id: $id, comment: $comment) {
+        ${noteSelection}
+      }
+    }
+  `, { id, comment })
+  return data.addComment
+}
+
+export default {
   getAll,
   create,
   update,

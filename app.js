@@ -5,7 +5,7 @@ import { readFile } from 'fs/promises'
 import { notesRouter } from './controllers/notes.js'
 import { usersRouter } from './controllers/users.js'
 import { loginRouter } from './controllers/login.js'
-import { commonMiddleware, unknownEndpoint, errorHandler, distPath } from './utils/middleware.js'
+import { commonMiddleware, distPath } from './utils/middleware.js'
 import { MONGODB_URI } from './utils/config.js'
 import { info, warn, error } from './utils/logger.js'
 
@@ -62,10 +62,6 @@ app.use('/api/notes', notesRouter)
 app.get(/^(?!\/api).*/, async (_req, res, next) => {
   return sendIndex(res, true).catch(next)
 })
-
-// 404 and error handlers
-app.use(unknownEndpoint)
-app.use(errorHandler)
 
 export async function initDatabase() {
   if (!MONGODB_URI) {
