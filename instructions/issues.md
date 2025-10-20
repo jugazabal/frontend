@@ -33,6 +33,35 @@ Here’s a checklist based on the issues found on the `http://localhost:3001/blo
 - [x] Test layout across different screen sizes.
 - [x] Ensure fallback styles are in place if CDN fails.
 
+# ✅ 404 Error Fix Checklist for http://127.0.0.1:5173/blogs
+
+## 🔍 Problem Summary
+The page is showing a `404 (Not Found)` error in the DevTools Console, indicating that the requested resource `/blogs` could not be found by the server.
+
 ---
 
-Would you like this checklist exported to a file or integrated into a project management tool like Jira or Trello?
+## 🛠 Checklist to Fix the Issue on http://127.0.0.1:5173/blogs
+
+### 🧭 Server-Side Routing
+- [ ] Verify that the backend server has a route defined for `/blogs`.
+- [ ] If using an API, ensure the endpoint is correctly defined (e.g., `/api/blogs`).
+- [ ] Confirm that the server is running and accessible at the expected port.
+
+### 🌐 Frontend Configuration
+- [ ] Check if the frontend is using client-side routing (e.g., React Router).
+- [ ] Ensure the server is configured to serve `index.html` for unknown routes.
+- [ ] For Vite, add fallback routing in `vite.config.js`:
+  ```js
+  export default defineConfig({
+    server: {
+      fs: {
+        strict: false
+      }
+    },
+    build: {
+      rollupOptions: {
+        input: '/index.html'
+      }
+    }
+  });
+
