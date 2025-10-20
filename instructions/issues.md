@@ -24,9 +24,9 @@ Here’s a checklist based on the issues found on the `http://localhost:3001/blo
 - [x] Provide feedback for actions like “Save” or “Clear” (e.g., toast notifications).
 
 ## ♿ Accessibility
-- [ ] Add ARIA labels for interactive elements.
-- [ ] Ensure keyboard navigation is supported.
-- [ ] Use semantic HTML for better screen reader support.
+- [x] Add ARIA labels for interactive elements.
+- [x] Ensure keyboard navigation is supported.
+- [x] Use semantic HTML for better screen reader support.
 
 ## 📱 Responsiveness & Styling
 - [ ] Confirm Bootstrap CSS loads correctly.

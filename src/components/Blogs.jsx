@@ -184,12 +184,12 @@ const Blogs = ({ user, notify, handleAuthError }) => {
 
   return (
     <div>
-      <h2 className="mb-3">Blogs</h2>
+      <h2 className="mb-3" id="blogs-heading">Blogs</h2>
       <p className="text-muted">
         Status column shows if a blog is marked <strong>Important</strong> or <strong>Regular</strong>.
       </p>
-      <Form className="border rounded p-3 bg-body-tertiary">
-        <Form.Label className="fw-semibold">Filter blogs</Form.Label>
+      <Form className="border rounded p-3 bg-body-tertiary" aria-labelledby="blogs-filter-heading">
+        <Form.Label className="fw-semibold" id="blogs-filter-heading">Filter blogs</Form.Label>
         <div className="d-flex flex-wrap gap-3">
           <Form.Check
             inline
@@ -221,8 +221,14 @@ const Blogs = ({ user, notify, handleAuthError }) => {
             checked={filter === 'mine'}
             onChange={() => setFilter('mine')}
             disabled={!user}
+            aria-describedby="filter-mine-help"
           />
         </div>
+        {!user && (
+          <div id="filter-mine-help" className="form-text">
+            Log in to enable the &quot;Created by me&quot; filter.
+          </div>
+        )}
         <div className="d-flex flex-column flex-md-row gap-3 mt-3">
           <Form.Group controlId="blog-search" className="flex-grow-1">
             <Form.Label className="mb-1">Search</Form.Label>
@@ -231,6 +237,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
               placeholder="Search by content or owner"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
+              aria-label="Search blogs"
             />
           </Form.Group>
           <Form.Group controlId="blog-sort">
@@ -250,8 +257,8 @@ const Blogs = ({ user, notify, handleAuthError }) => {
           <span>Loading blogs...</span>
         </div>
       ) : (
-        <Table striped bordered hover responsive className="mt-4">
-          <thead>
+        <Table striped bordered hover responsive className="mt-4" aria-describedby="blogs-heading">
+          <thead className="table-light">
             <tr>
               <th>Content</th>
               <th>Owner</th>
@@ -262,7 +269,7 @@ const Blogs = ({ user, notify, handleAuthError }) => {
           <tbody>
             {blogsToShow.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center text-muted">
+                <td colSpan={4} className="text-center text-muted" role="status">
                   No blogs match the selected filter.
                 </td>
               </tr>
