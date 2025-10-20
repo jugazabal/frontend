@@ -128,6 +128,22 @@ const App = () => {
       notify('You can only modify your own blogs.')
       return true
     }
+    if (Array.isArray(err?.graphQLErrors)) {
+      const codes = err.graphQLErrors
+        .map(error => error?.extensions?.code)
+        .filter(Boolean)
+      const messages = err.graphQLErrors
+        .map(error => (error?.message || '').toLowerCase())
+      if (codes.includes('UNAUTHENTICATED') || messages.includes('not authenticated')) {
+        notify('Session expired. Please log in again.')
+        handleLogout()
+        return true
+      }
+      if (codes.includes('FORBIDDEN') || messages.includes('forbidden')) {
+        notify('You can only modify your own blogs.')
+        return true
+      }
+    }
     return false
   }
 
