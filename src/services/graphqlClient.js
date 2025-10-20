@@ -1,5 +1,11 @@
-const apiBase = import.meta.env.VITE_API_BASE || ''
-const endpoint = `${apiBase}/graphql`
+const envApiBase = import.meta.env.VITE_API_BASE
+
+let normalizedBase = ''
+if (typeof envApiBase === 'string' && envApiBase.trim().length > 0) {
+  normalizedBase = envApiBase.trim().replace(/\/$/, '')
+}
+
+const endpoint = normalizedBase ? `${normalizedBase}/graphql` : '/graphql'
 
 let authToken = null
 
